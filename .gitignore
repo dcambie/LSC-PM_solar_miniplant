@@ -1,6 +1,9 @@
 # PyCharm
 .idea
 
+# Figures (GIT-LFS if needed)
+*.png
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
