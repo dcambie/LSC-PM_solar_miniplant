@@ -4,7 +4,9 @@ import pandas as pd
 import logging
 import time
 import sys
-import functools
+
+from pvtrace.geometry.transformations import rotation_matrix
+from pvtrace.material.utils import spherical_to_cart
 
 # Logging
 logging.getLogger('trimesh').disabled = True
@@ -44,17 +46,21 @@ reactor = Node(
             ]
         ),
     ),
-    parent=world
+    parent=world,
+    color=0xFF0000,
+    opacity=0.2
 )
+reactor.rotate(np.radians(30), (0, 1, 0))
 
 capillary = []
 r_mix = []
+epsilon = 1e-6
 for capillary_num in range(16):
     capillary.append(
         Node(
             name=f"Capillary_PFA_{capillary_num}",
             geometry=Cylinder(
-                length=0.47,
+                length=0.47-2*epsilon,
                 radius=(1/8*INCH)/2,
                 material=Material(
                     refractive_index=PFA_RI,
@@ -63,7 +69,8 @@ for capillary_num in range(16):
                     ]
                 ),
             ),
-            parent=reactor
+            parent=reactor,
+            opacity=0.3
         )
     )
 
@@ -76,32 +83,58 @@ for capillary_num in range(16):
 
     r_mix.append(
         Node(
-            name="Reaction_mixture_1",
+            name=f"Reaction_mixture_{capillary_num}",
             geometry=Cylinder(
-                length=0.47,
+                length=0.47-4*epsilon,
                 radius=(1/16*INCH)/2,
                 material=Material(
                     refractive_index=PFA_RI,
                     components=[reaction_mixture_material]
                 ),
             ),
-            parent=capillary[-1]
+            parent=capillary[-1],
+            opacity=1,
+            color=0X0000FF
         )
     )
 
-    capillary[-1].rotate(np.radians(90), (1, 0, 0))  # Rotate capillary (w/ r_mix) originally aligned Z axis so that is in LSC
-    capillary[-1].translate((-0.47/2+0.01+0.03*capillary_num, 0, 0))
+    capillary[-1].rotate(np.radians(90), (1, 0, 0))  # Rotate capillary (w/ r_mix) so that is in LSC (default is Z axis)
+    capillary[-1].translate((-0.47/2+0.01+0.03*capillary_num, epsilon, 0))
+    r_mix[-1].translate((0, epsilon, 0))
+
+
+vector = spherical_to_cart(np.radians(45), np.radians(60))
+
+
+def reversed_direction():
+    return tuple(-value for value in vector)
+
+
+def light_position():
+    position = rectangular_mask(0.47/2, 0.47/2)
+    matrix = np.linalg.inv(rotation_matrix(np.radians(-30), (0, 1, 0)))
+
+    homogeneous_pt = np.ones(4)
+    homogeneous_pt[0:3] = position
+    new_pt = np.dot(matrix, homogeneous_pt)[0:3]
+    return tuple(new_pt)
+
+
+def solar():
+    return 555
 
 light = Node(
-    name="Light (555nm)",
+    name="Solar Light",
     light=Light(
-        direction=functools.partial(cone, np.pi/8),
-        position=functools.partial(rectangular_mask, 0.47/2, 0.47/2)
+        wavelength=solar,
+        direction=reversed_direction,
+        position=light_position
     ),
     parent=world
 )
+light.translate(vector)
 
-renderer = MeshcatRenderer(wireframe=True, open_browser=True)
+renderer = MeshcatRenderer(wireframe=False, open_browser=True)
 scene = Scene(world)
 renderer.render(scene)
 finals = []
