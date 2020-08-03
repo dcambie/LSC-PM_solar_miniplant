@@ -60,7 +60,7 @@ for capillary_num in range(16):
         Node(
             name=f"Capillary_PFA_{capillary_num}",
             geometry=Cylinder(
-                length=0.47-2*epsilon,
+                length=0.47,
                 radius=(1/8*INCH)/2,
                 material=Material(
                     refractive_index=PFA_RI,
@@ -85,7 +85,7 @@ for capillary_num in range(16):
         Node(
             name=f"Reaction_mixture_{capillary_num}",
             geometry=Cylinder(
-                length=0.47-4*epsilon,
+                length=0.47,
                 radius=(1/16*INCH)/2,
                 material=Material(
                     refractive_index=PFA_RI,
@@ -99,8 +99,7 @@ for capillary_num in range(16):
     )
 
     capillary[-1].rotate(np.radians(90), (1, 0, 0))  # Rotate capillary (w/ r_mix) so that is in LSC (default is Z axis)
-    capillary[-1].translate((-0.47/2+0.01+0.03*capillary_num, epsilon, 0))
-    r_mix[-1].translate((0, epsilon, 0))
+    capillary[-1].translate((-0.47/2+0.01+0.03*capillary_num, 0, 0))
 
 
 vector = spherical_to_cart(np.radians(45), np.radians(60))
