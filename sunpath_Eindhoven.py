@@ -78,4 +78,5 @@ plt.title('Sunpath Eindhoven (calculated with pvlib)')
 ax.set_xlabel('Solar Azimuth (degrees)')
 ax.set_ylabel('Solar Elevation (degrees)')
 
-plt.savefig("sunpath_Eindhoven.png", dpi=300)
+plt.show()
+# plt.savefig("sunpath_Eindhoven.png", dpi=300)
