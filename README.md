@@ -3,3 +3,4 @@ Ray-tracing simulations to optimize the productivity of an LSC-PM based miniplan
 
 ## Dependencies
 * [PvTrace](https://github.com/danieljfarrell/pvtrace) 2.1.2
+* [pvlib](https://github.com/pvlib/pvlib-python) 0.7.2
