@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 import logging
 import time
-import sys
 
 from pvtrace.geometry.transformations import rotation_matrix
 from pvtrace.material.utils import spherical_to_cart
@@ -26,6 +25,10 @@ INCH = 0.0254  # meters
 
 # TILT ANGLE
 TILT_ANGLE = 30
+
+AZIMUT = 180
+ELEVATION = 38
+
 
 # Add nodes to the scene graph
 world = Node(
@@ -53,7 +56,6 @@ reactor = Node(
     ),
     parent=world,
 )
-reactor.rotate(np.radians(30), (0, 1, 0))
 
 capillary = []
 r_mix = []
@@ -106,8 +108,8 @@ for capillary_num in range(16):
     # Adjust capillary position
     capillary[-1].translate((-0.47/2+0.01+0.03*capillary_num, 0, 0))
 
-
-vector = spherical_to_cart(np.radians(45), np.radians(60))
+# Azimut and elevation are converted to the cartesian reference system used in simulations.
+vector = spherical_to_cart(np.radians(-ELEVATION+90), np.radians(-AZIMUT+180))
 
 
 def reversed_direction():
@@ -137,6 +139,9 @@ light = Node(
     parent=world
 )
 light.translate(vector)
+
+# Apply tilt angle
+reactor.rotate(np.radians(TILT_ANGLE), (0, 1, 0))
 
 renderer = MeshcatRenderer(wireframe=False, open_browser=True)
 scene = Scene(world)
