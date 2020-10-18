@@ -8,7 +8,7 @@ import sys
 from pvtrace.geometry.transformations import rotation_matrix
 from pvtrace.material.utils import spherical_to_cart
 
-# Logging
+# Set loggers
 logging.getLogger('trimesh').disabled = True
 logging.getLogger('shapely.geos').disabled = True
 logging.getLogger("pvtrace").setLevel(logging.INFO)
@@ -17,10 +17,15 @@ logging.getLogger("pvtrace").setLevel(logging.INFO)
 MB_ABS_DATAFILE = "reactor_data/MB_1M_1m_ACN.txt"
 LR305_ABS_DATAFILE = "reactor_data/Evonik_lr305_normalized_to_1m.txt"
 LR305_EMS_DATAFILE = "reactor_data/Evonik_lr305_normalized_to_1m_ems.txt"
+
+# Refractive indexes
 PMMA_RI = 1.48
 PFA_RI = 1.34
 ACN_RI = 1.344
-INCH = 0.0254
+INCH = 0.0254  # meters
+
+# TILT ANGLE
+TILT_ANGLE = 30
 
 # Add nodes to the scene graph
 world = Node(
@@ -47,8 +52,6 @@ reactor = Node(
         ),
     ),
     parent=world,
-    color=0xFF0000,
-    opacity=0.2
 )
 reactor.rotate(np.radians(30), (0, 1, 0))
 
@@ -70,7 +73,7 @@ for capillary_num in range(16):
                 ),
             ),
             parent=reactor,
-            opacity=0.3
+            # opacity=0.3
         )
     )
 
@@ -93,12 +96,14 @@ for capillary_num in range(16):
                 ),
             ),
             parent=capillary[-1],
-            opacity=1,
-            color=0X0000FF
+            # opacity=1,
+            # color=0X0000FF
         )
     )
 
-    capillary[-1].rotate(np.radians(90), (1, 0, 0))  # Rotate capillary (w/ r_mix) so that is in LSC (default is Z axis)
+    # Rotate capillary (w/ r_mix) so that is in LSC (default is Z axis)
+    capillary[-1].rotate(np.radians(90), (1, 0, 0))
+    # Adjust capillary position
     capillary[-1].translate((-0.47/2+0.01+0.03*capillary_num, 0, 0))
 
 
@@ -149,7 +154,4 @@ print(f"absorbed {len(absorbed)}")
 # Wait for Ctrl-C to terminate the script; keep the window open
 print("Ctrl-C to close")
 while True:
-    try:
-        time.sleep(.3)
-    except KeyboardInterrupt:
-        sys.exit()
+    time.sleep(1)
