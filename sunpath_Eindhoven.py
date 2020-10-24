@@ -32,6 +32,8 @@ Sun path diagram Eindhoven
 # - after about 6:30 PM on the summer solstice
 # - after about 5:30 PM on the spring equinox
 # - after about 4:30 PM on the winter solstice
+from pathlib import Path
+
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from pvlib import solarposition
 from pvlib.location import Location
@@ -53,7 +55,7 @@ fig, ax = plt.subplots()
 points = ax.scatter(solpos.azimuth, solpos.apparent_elevation, s=2,
                     c=solpos.index.dayofyear, label=None)
 
-# Colorbar
+# Color bar
 cbar = fig.colorbar(points, orientation="vertical")
 cbar.ax.get_yaxis().labelpad = 15
 
@@ -69,7 +71,14 @@ for hour in np.unique(solpos.index.hour):
 for date in pd.to_datetime(['2019-03-21', '2019-06-21', '2019-12-21']):
     times = pd.date_range(date, date+pd.Timedelta('24h'), freq='5min', tz=location.pytz)
     solpos = solarposition.get_solarposition(times, location.latitude, location.longitude)
+    # Ignore points where apparent elevation is below horizon ;)
     solpos = solpos.loc[solpos['apparent_elevation'] > 0, :]
+
+    # Export as csv for both use and validation
+    export_file_name = f"{location.name}_{date.strftime('%Y-%m-%d')}_solar_position.csv"
+    export_file_path = Path("ephemerides") / export_file_name
+    solpos.to_csv(export_file_path, columns=["azimuth", "apparent_elevation"])
+
     label = date.strftime('%Y-%m-%d')
     ax.plot(solpos.azimuth, solpos.apparent_elevation, label=label)
 
@@ -79,4 +88,8 @@ ax.set_xlabel('Solar Azimuth (degrees)')
 ax.set_ylabel('Solar Elevation (degrees)')
 
 plt.show()
-# plt.savefig("sunpath_Eindhoven.png", dpi=300)
+
+# Export as figure (for SI)
+plot_file_name = f"{location.name}_solar_position"
+plot_file_path = Path("ephemerides") / plot_file_name
+plt.savefig(f"{location.name}_solar_positions.png", dpi=300)
