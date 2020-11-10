@@ -6,7 +6,7 @@ from miniplant_reactor import create_standard_scene
 # Set loggers
 logging.getLogger('trimesh').disabled = True
 logging.getLogger('shapely.geos').disabled = True
-logging.getLogger("pvtrace").setLevel(logging.INFO)
+logging.getLogger("pvtrace").setLevel(logging.WARN)
 
 LOGGER = logging.getLogger("pvtrace").getChild("miniplant")
 

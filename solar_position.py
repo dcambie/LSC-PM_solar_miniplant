@@ -9,7 +9,7 @@ locations = {
 }
 
 # Time points to be calculated
-times = pd.date_range(start=datetime.datetime(2020, 1, 1), end=datetime.datetime(2020, 12, 31), freq='1H',)
+times = pd.date_range(start=datetime.datetime(2020, 1, 1), end=datetime.datetime(2020, 1, 31), freq='1H',)
 
 calculation_results = {}
 export_cols = ("apparent_elevation", "azimuth", "ghi", "dhi")
@@ -25,5 +25,5 @@ for site in locations.values():
     # Filter only hours with sun
     calculation_results[site.name].query('apparent_elevation>0', inplace=True)
     # Export to CSV
-    calculation_results[site.name].to_csv(f"Results_{site.name}.csv", columns=export_cols)
+    calculation_results[site.name].to_csv(f"Results_{site.name}_jan.csv", columns=export_cols)
 
