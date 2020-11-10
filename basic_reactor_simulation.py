@@ -3,8 +3,10 @@ import numpy as np
 import pandas as pd
 import logging
 import time
+import collections
 
 from pvtrace.geometry.transformations import rotation_matrix
+from pvtrace.material.component import Reactor
 from pvtrace.material.utils import spherical_to_cart
 
 # Set loggers
@@ -23,12 +25,16 @@ PFA_RI = 1.34
 ACN_RI = 1.344
 INCH = 0.0254  # meters
 
-# TILT ANGLE
+# LSCPM tilt angle
 TILT_ANGLE = 30
 
+# Sun position
 AZIMUT = 180
 ELEVATION = 38
 
+# Local settings
+TOTAL_PHOTONS = 100
+RENDER = False
 
 # Add nodes to the scene graph
 world = Node(
@@ -60,6 +66,11 @@ reactor = Node(
 capillary = []
 r_mix = []
 epsilon = 1e-6
+
+# Reaction Mixture absorption
+reaction_absorption_coefficient = pd.read_csv(MB_ABS_DATAFILE, sep="\t").values
+reaction_mixture_material = Reactor(reaction_absorption_coefficient)
+
 for capillary_num in range(16):
     capillary.append(
         Node(
@@ -79,13 +90,6 @@ for capillary_num in range(16):
         )
     )
 
-    # Reaction Mixture absorption
-    reaction_absorption_coefficient = pd.read_csv(MB_ABS_DATAFILE, sep="\t").values
-    x = reaction_absorption_coefficient[0]
-    ri = np.ones(len(x)) * ACN_RI
-    ACN_refractive_index = np.column_stack((x, ri))
-    reaction_mixture_material = Absorber(ACN_refractive_index, reaction_absorption_coefficient)
-
     r_mix.append(
         Node(
             name=f"Reaction_mixture_{capillary_num}",
@@ -93,7 +97,7 @@ for capillary_num in range(16):
                 length=0.47,
                 radius=(1/16*INCH)/2,
                 material=Material(
-                    refractive_index=PFA_RI,
+                    refractive_index=ACN_RI,
                     components=[reaction_mixture_material]
                 ),
             ),
@@ -129,7 +133,8 @@ def light_position():
 def solar():
     return 555
 
-light = Node(
+
+solar_light = Node(
     name="Solar Light",
     light=Light(
         wavelength=solar,
@@ -138,25 +143,33 @@ light = Node(
     ),
     parent=world
 )
-light.translate(vector)
+solar_light.translate(vector)
 
 # Apply tilt angle
 reactor.rotate(np.radians(TILT_ANGLE), (0, 1, 0))
 
-renderer = MeshcatRenderer(wireframe=False, open_browser=True)
 scene = Scene(world)
-renderer.render(scene)
+if RENDER:
+    renderer = MeshcatRenderer(wireframe=False, open_browser=False)
+    renderer.render(scene)
 finals = []
-for ray in scene.emit(100):
+count = 0
+
+for ray in scene.emit(TOTAL_PHOTONS):
+    count += 1
     steps = photon_tracer.follow(scene, ray)
     path, events = zip(*steps)
     finals.append(events[-1])
-    renderer.add_ray_path(path)
+    if RENDER:
+        renderer.add_ray_path(path)
+    if count % 100 == 0:
+        print(count)
 
-absorbed = [event for event in finals if event == Event.ABSORB]
-print(f"absorbed {len(absorbed)}")
+count_events = collections.Counter(finals)
+efficiency = count_events[Event.REACT] / TOTAL_PHOTONS
+print(f"Efficiency is {efficiency:.3f}")
+
 
 # Wait for Ctrl-C to terminate the script; keep the window open
-print("Ctrl-C to close")
-while True:
-    time.sleep(1)
+print("Press Enter to close")
+input()
