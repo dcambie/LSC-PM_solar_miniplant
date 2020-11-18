@@ -1,3 +1,4 @@
+import logging
 from typing import Callable
 
 import pandas as pd
@@ -26,6 +27,9 @@ INCH = 0.0254  # meters
 
 def create_standard_scene(tilt_angle: int = 30, solar_elevation: int = 30, solar_azimuth: int = 180,
                           solar_spectrum_function: Callable = lambda: 555) -> Scene:
+    logger = logging.getLogger("pvtrace").getChild("miniplant")
+    logger.info(f"Creating simulation scene w/ angle={tilt_angle}deg solar elevation={solar_elevation}, "
+                f"solar azimuth={solar_azimuth}...")
     # Add nodes to the scene graph
     # Let's start with world - i.e. outer bounds
     world = Node(
@@ -130,6 +134,7 @@ def create_standard_scene(tilt_angle: int = 30, solar_elevation: int = 30, solar
     reactor.rotate(np.radians(tilt_angle), (0, 1, 0))
 
     scene = Scene(world)
+    logger.info(f"Simulation scene created successfully!")
     return scene
 
 
@@ -137,7 +142,13 @@ if __name__ == '__main__':
     from pvtrace import MeshcatRenderer, photon_tracer
     from collections import Counter
 
-    scene = create_standard_scene(tilt_angle=80, solar_elevation=10, solar_azimuth=95)
+    scene = create_standard_scene(tilt_angle=30, solar_elevation=20, solar_azimuth=180)
+
+    def solar_spectrum():
+
+        from solcore.light_source import calculate_spectrum_spectral2
+        calculate_spectrum_spectral2()
+    scene = create_standard_scene(tilt_angle=30, solar_elevation=20, solar_azimuth=180, solar_spectrum_function=solar_spectrum)
 
     renderer = MeshcatRenderer(wireframe=False, open_browser=True)
     renderer.render(scene)
