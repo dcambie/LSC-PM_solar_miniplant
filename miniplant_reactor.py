@@ -4,7 +4,7 @@ from typing import Callable
 import pandas as pd
 import numpy as np
 
-from pvtrace import Node, Box, Sphere, Material, Luminophore, Absorber, Cylinder, Reactor, Light, Scene
+from pvtrace import Node, Box, Sphere, Material, Luminophore, Absorber, Cylinder, Reactor, Light, Scene, Distribution
 from pvtrace import isotropic, rectangular_mask
 
 from pvtrace.geometry.transformations import rotation_matrix
@@ -28,8 +28,8 @@ INCH = 0.0254  # meters
 def create_standard_scene(tilt_angle: int = 30, solar_elevation: int = 30, solar_azimuth: int = 180,
                           solar_spectrum_function: Callable = lambda: 555) -> Scene:
     logger = logging.getLogger("pvtrace").getChild("miniplant")
-    logger.info(f"Creating simulation scene w/ angle={tilt_angle}deg solar elevation={solar_elevation}, "
-                f"solar azimuth={solar_azimuth}...")
+    logger.info(f"Creating simulation scene w/ angle={tilt_angle}deg solar elevation={solar_elevation:.2f}, "
+                f"solar azimuth={solar_azimuth:.2f}...")
     # Add nodes to the scene graph
     # Let's start with world - i.e. outer bounds
     world = Node(
@@ -145,9 +145,9 @@ if __name__ == '__main__':
     scene = create_standard_scene(tilt_angle=30, solar_elevation=20, solar_azimuth=180)
 
     def solar_spectrum():
-
         from solcore.light_source import calculate_spectrum_spectral2
-        calculate_spectrum_spectral2()
+        wavelength, intensity = calculate_spectrum_spectral2(power_density_in_nm=True)
+        return Distribution(wavelength[10:37], intensity[10:37]).sample(np.random.uniform())
     scene = create_standard_scene(tilt_angle=30, solar_elevation=20, solar_azimuth=180, solar_spectrum_function=solar_spectrum)
 
     renderer = MeshcatRenderer(wireframe=False, open_browser=True)
