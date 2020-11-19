@@ -15,7 +15,3 @@ for angle in angles:
     angle_sum[angle] = daily['efficiency_corrected'].sum()
 
 plt.show()
-print(angle_sum)
-plt.figure()
-plt.plot(angle_sum.keys(), angle_sum.values())
-plt.show()
