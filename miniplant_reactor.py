@@ -150,7 +150,7 @@ if __name__ == '__main__':
         return Distribution(wavelength[10:37], intensity[10:37]).sample(np.random.uniform())
     scene = create_standard_scene(tilt_angle=30, solar_elevation=20, solar_azimuth=180, solar_spectrum_function=solar_spectrum)
 
-    renderer = MeshcatRenderer(wireframe=False, open_browser=True)
+    renderer = MeshcatRenderer(wireframe=True, open_browser=True)
     renderer.render(scene)
     finals = []
     count = 0
