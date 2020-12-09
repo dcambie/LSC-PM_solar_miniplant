@@ -132,7 +132,7 @@ def create_standard_scene(tilt_angle: int = 30, solar_elevation: int = 30, solar
 
     # Apply tilt angle
     reactor.rotate(np.radians(tilt_angle), (0, 1, 0))
-    reactor.translate((-np.cos(np.deg2rad(tilt_angle)) * 0.5 * 0.008, 0,
+    reactor.translate((-np.sin(np.deg2rad(tilt_angle)) * 0.5 * 0.008, 0,
                        -np.cos(np.deg2rad(tilt_angle)) * 0.5 * 0.008))
 
     scene = Scene(world)
