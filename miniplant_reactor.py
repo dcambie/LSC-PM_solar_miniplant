@@ -144,24 +144,34 @@ if __name__ == '__main__':
     from pvtrace import MeshcatRenderer, photon_tracer
     from collections import Counter
 
-    scene = create_standard_scene(tilt_angle=30, solar_elevation=20, solar_azimuth=180)
+    tilt_angle = 30
+    solar_elevation = 60
+    solar_azimuth = 180
 
     def solar_spectrum():
         from solcore.light_source import calculate_spectrum_spectral2
         wavelength, intensity = calculate_spectrum_spectral2(power_density_in_nm=True)
         return Distribution(wavelength[10:37], intensity[10:37]).sample(np.random.uniform())
-    scene = create_standard_scene(tilt_angle=30, solar_elevation=20, solar_azimuth=180, solar_spectrum_function=solar_spectrum)
+    scene = create_standard_scene(tilt_angle, solar_elevation, solar_azimuth, solar_spectrum_function=solar_spectrum)
 
     renderer = MeshcatRenderer(wireframe=True, open_browser=True)
     renderer.render(scene)
     finals = []
     count = 0
 
+    def surface_incident(tilt_angle: int = 30, solar_elevation: int = 30, solar_azimuth: int = 180):
+        reactor_normal = spherical_to_cart(np.radians(tilt_angle), 0)
+        solar_light_normal = spherical_to_cart(np.radians(-solar_elevation + 90), np.radians(-solar_azimuth + 180))
+        surface_fraction = np.dot(reactor_normal, solar_light_normal)
+        return surface_fraction
+
     for ray in scene.emit(100):
         steps = photon_tracer.follow(scene, ray)
         path, events = zip(*steps)
         finals.append(events[-1])
         renderer.add_ray_path(path)
+
+    Surface_fraction = surface_incident(tilt_angle, solar_elevation, solar_azimuth)
 
     group_events_by_type = Counter(finals)
     print(f"Simulation results are {group_events_by_type}")
