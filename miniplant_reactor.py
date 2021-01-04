@@ -165,11 +165,20 @@ if __name__ == '__main__':
         surface_fraction = np.dot(reactor_normal, solar_light_normal)
         return surface_fraction
 
-    for ray in scene.emit(100):
-        steps = photon_tracer.follow(scene, ray)
-        path, events = zip(*steps)
+    # for ray in scene.emit(100):
+    #     steps = photon_tracer.follow(scene, ray)
+    #     path, events = zip(*steps)
+    #     finals.append(events[-1])
+    #     renderer.add_ray_path(path)
+
+    # Multithreaded simulation
+    results = scene.simulate(num_rays=100)
+    # Flatter workers list
+    all_workers_results = [item for sublist in results for item in sublist]
+    for photon in all_workers_results:
+        path, events = zip(*photon)
+        print(events)
         finals.append(events[-1])
-        renderer.add_ray_path(path)
 
     Surface_fraction = surface_incident(tilt_angle, solar_elevation, solar_azimuth)
 
