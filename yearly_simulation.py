@@ -62,7 +62,9 @@ if __name__ == '__main__':
     # evaluate_tilt_angle(30)
 
     # Tilt angles to be tested
-    tilt_range = [10, 20, 30, 40, 50, 60]
-
+    tilt_range = [60]
+    import time
+    start=time.time()
     for tilt in tilt_range:
         evaluate_tilt_angle(tilt)
+    print(f"It took {time.time()-start:.1f} seconds")
