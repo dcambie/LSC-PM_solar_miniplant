@@ -33,6 +33,7 @@ def evaluate_tilt_angle(tilt_angle: int):
         # If spectrum is not valid (close to sunset/sunrise) skip simulation.
         if np.count_nonzero(df['spectrum']._y) == 0:
             df['efficiency'] = 0
+            df['surface_fraction'] = 0
             df['efficiency_corrected'] = 0
             return df
 
@@ -56,14 +57,15 @@ def evaluate_tilt_angle(tilt_angle: int):
 
     # These now include efficiency and efficiency_corrected
     results.to_csv(f"paper_results/{LOCATION.name}_{tilt_angle}deg_results.csv",
-                   columns=("apparent_elevation", "azimuth", "ghi", "dhi", "efficiency", 'efficiency_corrected'))
+                   columns=("apparent_elevation", "azimuth", "ghi", "dhi", "efficiency", "surface_fraction", 'efficiency_corrected'))
 
 
 if __name__ == '__main__':
+
+    # evaluate_tilt_angle(30)
+
     # Tilt angles to be tested
-    tilt_range = [60]
-    import time
-    start_time = time.time()
+    tilt_range = [10]
+    start = time.time()
     for tilt in tilt_range:
         evaluate_tilt_angle(tilt)
-    print(f"It took {time.time()-start_time:.1f} seconds")
