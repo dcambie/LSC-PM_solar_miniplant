@@ -141,8 +141,9 @@ def create_standard_scene(tilt_angle: int = 30, solar_elevation: int = 30, solar
 
 
 if __name__ == '__main__':
-    from pvtrace import MeshcatRenderer, photon_tracer
     from collections import Counter
+    from pvtrace.algorithm import photon_tracer
+    import time
 
     tilt_angle = 30
     solar_elevation = 60
@@ -154,8 +155,8 @@ if __name__ == '__main__':
         return Distribution(wavelength[10:37], intensity[10:37]).sample(np.random.uniform())
     scene = create_standard_scene(tilt_angle, solar_elevation, solar_azimuth, solar_spectrum_function=solar_spectrum)
 
-    renderer = MeshcatRenderer(wireframe=True, open_browser=True)
-    renderer.render(scene)
+    # renderer = MeshcatRenderer(wireframe=True, open_browser=True)
+    # renderer.render(scene)
     finals = []
     count = 0
 
@@ -165,20 +166,24 @@ if __name__ == '__main__':
         surface_fraction = np.dot(reactor_normal, solar_light_normal)
         return surface_fraction
 
-    # for ray in scene.emit(100):
+    start = time.time()
+
+    # for ray in scene.emit(1000):  # The simulation took 161.98 s
     #     steps = photon_tracer.follow(scene, ray)
     #     path, events = zip(*steps)
     #     finals.append(events[-1])
-    #     renderer.add_ray_path(path)
+    #     # renderer.add_ray_path(path)
 
     # Multithreaded simulation
-    results = scene.simulate(num_rays=100)
+    results = scene.simulate(num_rays=1000)  # The simulation took 176.45 s
+    # ThreadPool 122.80 s
+    # ProcessPool 28.12 s
+
     # Flatter workers list
     all_workers_results = [item for sublist in results for item in sublist]
-    for photon in all_workers_results:
-        path, events = zip(*photon)
-        print(events)
-        finals.append(events[-1])
+    finals = [photon[-1][1] for photon in all_workers_results]
+
+    print(f"The simulation took {time.time()-start:.2f} s")
 
     Surface_fraction = surface_incident(tilt_angle, solar_elevation, solar_azimuth)
 
