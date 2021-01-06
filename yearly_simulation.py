@@ -42,7 +42,7 @@ def evaluate_tilt_angle(tilt_angle: int):
 
         df['efficiency'] = run_simulation(tilt_angle=tilt_angle, solar_azimuth=df['azimuth'],
                                           solar_elevation=df['apparent_elevation'],
-                                          solar_spectrum_function=photon_factory, num_photons=100)
+                                          solar_spectrum_function=photon_factory, num_photons=128)
         logger.info(f"Simulation completed for {df.name}")
         df['surface_fraction'] = surface_incident(tilt_angle, df['apparent_elevation'], df['azimuth'])
         df['efficiency_corrected'] = df['efficiency'] * df['ghi'] * df['surface_fraction']
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     # evaluate_tilt_angle(30)
 
     # Tilt angles to be tested
-    tilt_range = [10]
+    tilt_range = [90, 85, 80, 75, 70, 65, 60, 55, 50, 45]
     start = time.time()
     for tilt in tilt_range:
         evaluate_tilt_angle(tilt)
