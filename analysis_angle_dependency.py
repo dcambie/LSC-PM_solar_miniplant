@@ -12,20 +12,14 @@ def surface_incident(tilt_angle: int = 30, solar_elevation: int = 30, solar_azim
     return surface_fraction
 
 
-angles = [10, 20, 30, 40, 50, 60]
+angles = np.arange(0, 91, 5)
+angles = [45, 70, 75, 80, 85, 90]
 angle_sum = {}
 plt.figure()
 for angle in angles:
-    FILE = Path(f"./saved_results/yearly_2h_ein/Eindhoven_{angle}deg_results.csv")
+    FILE = Path(f"./paper_results/Eindhoven_{angle}deg_results.csv")
     df = pd.read_csv(FILE, parse_dates=[0], index_col=0, date_parser=lambda col: pd.to_datetime(col, utc=True))
 
-    def correct_efficiency(df) -> float:
-        """ Actually perform raytracing simulation w/ pvtrace and returns efficiency """
-        correction_factor = surface_incident(tilt_angle=angle, solar_elevation=df['apparent_elevation'], solar_azimuth=df['azimuth'])
-        df['efficiency_corrected'] = df['efficiency'] * df['ghi'] * abs(correction_factor)
-        return df
-
-    df = df.apply(correct_efficiency, axis=1)
     daily = df.resample('D').sum()
     plt.plot(daily.index, daily["efficiency_corrected"], label=f"{angle} deg")
 
@@ -38,8 +32,17 @@ for angle in angles:
     plt.legend(loc="upper left")
     angle_sum[angle] = daily['efficiency_corrected'].sum()
 plt.show()
+plt.clf()
+
 
 factor = max(angle_sum.values())
+x = []
+y = []
 for k in angle_sum:
-  angle_sum[k] = angle_sum[k] / factor
-print(angle_sum)
+    x.append(k)
+    y.append(angle_sum[k] / factor)
+
+print(x)
+print(y)
+plt.plot(x, y)
+plt.show()
