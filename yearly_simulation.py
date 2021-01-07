@@ -11,14 +11,16 @@ from pvtrace.material.utils import spherical_to_cart
 from basic_reactor_simulation import run_simulation
 from solar_data import solar_data_for_place_and_time
 
-LOCATION = Location(51.4416, 5.6497, 'Europe/Amsterdam', 17, 'Eindhoven')
+LOCATION = Location(latitude=51.4416, longitude=5.6497, tz='Europe/Amsterdam', altitude=17, name='Eindhoven')
 TIME_RANGE = pd.date_range(start=datetime.datetime(2020, 1, 1), end=datetime.datetime(2021, 1, 1), freq='0.5H')
+
 
 def surface_incident(tilt_angle: int = 30, solar_elevation: int = 30, solar_azimuth: int = 180):
     reactor_normal = spherical_to_cart(np.radians(tilt_angle), 0)
     solar_light_normal = spherical_to_cart(np.radians(-solar_elevation + 90), np.radians(-solar_azimuth + 180))
     surface_fraction = np.dot(reactor_normal, solar_light_normal)
     return surface_fraction
+
 
 def evaluate_tilt_angle(tilt_angle: int):
     logger = logging.getLogger("pvtrace").getChild("miniplant")
@@ -40,7 +42,7 @@ def evaluate_tilt_angle(tilt_angle: int):
 
         df['efficiency'] = run_simulation(tilt_angle=tilt_angle, solar_azimuth=df['azimuth'],
                                           solar_elevation=df['apparent_elevation'],
-                                          solar_spectrum_function=photon_factory, num_photons=100)
+                                          solar_spectrum_function=photon_factory, num_photons=128)
         logger.info(f"Simulation completed for {df.name}")
         df['surface_fraction'] = surface_incident(tilt_angle, df['apparent_elevation'], df['azimuth'])
         df['efficiency_corrected'] = df['efficiency'] * df['ghi'] * df['surface_fraction']
@@ -63,7 +65,7 @@ if __name__ == '__main__':
     # evaluate_tilt_angle(30)
 
     # Tilt angles to be tested
-    tilt_range = [10]
+    tilt_range = [90, 85, 80, 75, 70, 65, 60, 55, 50, 45]
     start = time.time()
     for tilt in tilt_range:
         evaluate_tilt_angle(tilt)
