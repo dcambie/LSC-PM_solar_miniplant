@@ -25,7 +25,7 @@ ACN_RI = 1.344
 INCH = 0.0254  # meters
 
 
-def create_standard_scene(tilt_angle: int = 30, solar_elevation: int = 30, solar_azimuth: int = 180,
+def create_standard_scene(tilt_angle: float = 30, solar_elevation: float = 30, solar_azimuth: float = 180,
                           solar_spectrum_function: Callable = lambda: 555) -> Scene:
     logger = logging.getLogger("pvtrace").getChild("miniplant")
     logger.info(f"Creating simulation scene w/ angle={tilt_angle}deg solar elevation={solar_elevation:.2f}, "
@@ -138,56 +138,3 @@ def create_standard_scene(tilt_angle: int = 30, solar_elevation: int = 30, solar
     scene = Scene(world)
     logger.info(f"Simulation scene created successfully!")
     return scene
-
-
-if __name__ == '__main__':
-    from collections import Counter
-    from pvtrace.algorithm import photon_tracer
-    import time
-
-    tilt_angle = 30
-    solar_elevation = 60
-    solar_azimuth = 180
-
-    def solar_spectrum():
-        from solcore.light_source import calculate_spectrum_spectral2
-        wavelength, intensity = calculate_spectrum_spectral2(power_density_in_nm=True)
-        return Distribution(wavelength[10:37], intensity[10:37]).sample(np.random.uniform())
-    scene = create_standard_scene(tilt_angle, solar_elevation, solar_azimuth, solar_spectrum_function=solar_spectrum)
-
-    # renderer = MeshcatRenderer(wireframe=True, open_browser=True)
-    # renderer.render(scene)
-    finals = []
-    count = 0
-
-    def surface_incident(tilt_angle: int = 30, solar_elevation: int = 30, solar_azimuth: int = 180):
-        reactor_normal = spherical_to_cart(np.radians(tilt_angle), 0)
-        solar_light_normal = spherical_to_cart(np.radians(-solar_elevation + 90), np.radians(-solar_azimuth + 180))
-        surface_fraction = np.dot(reactor_normal, solar_light_normal)
-        return surface_fraction
-
-    start = time.time()
-
-    # for ray in scene.emit(1000):  # The simulation took 161.98 s
-    #     steps = photon_tracer.follow(scene, ray)
-    #     path, events = zip(*steps)
-    #     finals.append(events[-1])
-    #     # renderer.add_ray_path(path)
-
-    # Multithreaded simulation
-    results = scene.simulate(num_rays=1000)  # The simulation took 176.45 s
-    # ThreadPool 122.80 s
-    # ProcessPool 28.12 s
-
-    # Flatter workers list
-    all_workers_results = [item for sublist in results for item in sublist]
-    finals = [photon[-1][1] for photon in all_workers_results]
-
-    print(f"The simulation took {time.time()-start:.2f} s")
-
-    Surface_fraction = surface_incident(tilt_angle, solar_elevation, solar_azimuth)
-
-    group_events_by_type = Counter(finals)
-    print(f"Simulation results are {group_events_by_type}")
-
-    input("Press Enter to quit")
