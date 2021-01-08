@@ -4,7 +4,6 @@ from pathlib import Path
 from pvtrace.material.utils import spherical_to_cart
 
 
-
 def surface_incident(tilt_angle: int = 30, solar_elevation: int = 30, solar_azimuth: int = 180):
     reactor_normal = spherical_to_cart(np.radians(tilt_angle), 0)
     solar_light_normal = spherical_to_cart(np.radians(-solar_elevation + 90), np.radians(-solar_azimuth + 180))
@@ -15,7 +14,7 @@ def surface_incident(tilt_angle: int = 30, solar_elevation: int = 30, solar_azim
 angles = np.arange(0, 91, 5)  # [0 - 90] every 5 degrees
 
 for angle in angles:
-    FILE = Path(f"./Eindhoven_{angle}deg_results.csv")
+    FILE = Path(f"Eindhoven_{angle}deg_results.csv")
 
     # Skip missing files
     if not FILE.exists():
