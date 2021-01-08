@@ -34,5 +34,3 @@ for angle in angles:
     df = df.apply(correct_efficiency, axis=1)
     # Save as new file
     df.to_csv(FILE)
-
-    efficiency
