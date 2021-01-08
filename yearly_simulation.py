@@ -15,11 +15,11 @@ LOCATION = Location(latitude=51.4416, longitude=5.6497, tz='Europe/Amsterdam', a
 TIME_RANGE = pd.date_range(start=datetime.datetime(2020, 1, 1), end=datetime.datetime(2021, 1, 1), freq='0.5H')
 
 
-def surface_incident(tilt_angle: int = 30, solar_elevation: int = 30, solar_azimuth: int = 180):
+def surface_incident(tilt_angle: float = 30, solar_elevation: float = 30, solar_azimuth: float = 180):
     reactor_normal = spherical_to_cart(np.radians(tilt_angle), 0)
     solar_light_normal = spherical_to_cart(np.radians(-solar_elevation + 90), np.radians(-solar_azimuth + 180))
     surface_fraction = np.dot(reactor_normal, solar_light_normal)
-    return surface_fraction
+    return surface_fraction if surface_fraction > 0 else 0
 
 
 def evaluate_tilt_angle(tilt_angle: int):
