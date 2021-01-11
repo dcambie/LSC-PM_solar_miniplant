@@ -4,6 +4,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.dates import DateFormatter
+import matplotlib.ticker as mtick
 
 GOLDEN_RATIO = (1 + 5 ** 0.5) / 2
 
