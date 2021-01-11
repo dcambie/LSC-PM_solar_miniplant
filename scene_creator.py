@@ -27,9 +27,11 @@ INCH = 0.0254  # meters
 
 def create_standard_scene(tilt_angle: float = 30, solar_elevation: float = 30, solar_azimuth: float = 180,
                           solar_spectrum_function: Callable = lambda: 555) -> Scene:
+
     logger = logging.getLogger("pvtrace").getChild("miniplant")
     logger.info(f"Creating simulation scene w/ angle={tilt_angle}deg solar elevation={solar_elevation:.2f}, "
                 f"solar azimuth={solar_azimuth:.2f}...")
+
     # Add nodes to the scene graph
     # Let's start with world - i.e. outer bounds
     world = Node(
@@ -115,10 +117,13 @@ def create_standard_scene(tilt_angle: float = 30, solar_elevation: float = 30, s
         new_pt = np.dot(matrix, homogeneous_pt)[0:3]
         return tuple(new_pt)
 
+    # Define rays direction based on solar position
+    solar_light_vector = spherical_to_cart(np.radians(-solar_elevation + 90), np.radians(-solar_azimuth + 180))
+
     def reversed_solar_light_vector():
         return tuple(-value for value in solar_light_vector)
 
-    solar_light_vector = spherical_to_cart(np.radians(-solar_elevation + 90), np.radians(-solar_azimuth + 180))
+    # Create light
     solar_light = Node(
         name="Solar Light",
         light=Light(
@@ -130,11 +135,9 @@ def create_standard_scene(tilt_angle: float = 30, solar_elevation: float = 30, s
     )
     solar_light.translate(solar_light_vector)
 
-    # Apply tilt angle
+    # Apply tilt angle to the reactor (and its children)
     reactor.rotate(np.radians(tilt_angle), (0, 1, 0))
     reactor.translate((-np.sin(np.deg2rad(tilt_angle)) * 0.5 * 0.008, 0,
                        -np.cos(np.deg2rad(tilt_angle)) * 0.5 * 0.008))
 
-    scene = Scene(world)
-    logger.info(f"Simulation scene created successfully!")
-    return scene
+    return Scene(world)
