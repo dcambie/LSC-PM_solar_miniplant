@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mtick
 
 GOLDEN_RATIO = (1 + 5 ** 0.5) / 2
 fig, ax = plt.subplots(figsize=plt.figaspect(1/GOLDEN_RATIO))
