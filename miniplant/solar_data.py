@@ -52,7 +52,7 @@ def solar_data_for_place_and_time(site: Location, datetime_points=pd.core.indexe
     # Filter points with sun above horizon
     calculation_results.query('apparent_elevation>0', inplace=True)
     # Export to CSV
-    calculation_results.to_csv(f"Full_data_{site.name}.csv", columns=("apparent_elevation", "azimuth", "ghi", "dhi"))
+    # calculation_results.to_csv(f"Full_data_{site.name}.csv", columns=("apparent_elevation", "azimuth", "ghi", "dhi"))
 
     logger = logging.getLogger("pvtrace").getChild("miniplant")
     logger.info(f"Generated solar data for {site.name} [lat. {site.latitude}, long. {site.longitude}] in the time range"
