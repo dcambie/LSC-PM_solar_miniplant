@@ -29,7 +29,7 @@ def create_standard_scene(tilt_angle: float = 30, solar_elevation: float = 30, s
                           solar_spectrum_function: Callable = lambda: 555) -> Scene:
 
     logger = logging.getLogger("pvtrace").getChild("miniplant")
-    logger.info(f"Creating simulation scene w/ angle={tilt_angle}deg solar elevation={solar_elevation:.2f}, "
+    logger.debug(f"Creating simulation scene w/ angle={tilt_angle}deg solar elevation={solar_elevation:.2f}, "
                 f"solar azimuth={solar_azimuth:.2f}...")
 
     # Add nodes to the scene graph

@@ -26,6 +26,8 @@ TIME_RANGE = pd.date_range(start=datetime.datetime(2020, 1, 1), end=datetime.dat
 # Test script with this
 # TIME_RANGE = pd.date_range(start=datetime.datetime(2020, 1, 1), end=datetime.datetime(2020, 1, 2), freq='5H')
 
+logger = logging.getLogger("pvtrace").getChild("miniplant")
+
 
 def run_simulation(tilt_angle: int = 0, solar_elevation: int = 30, solar_azimuth: int = 180,
                    solar_spectrum_function: Callable = lambda: 555,
@@ -34,7 +36,7 @@ def run_simulation(tilt_angle: int = 0, solar_elevation: int = 30, solar_azimuth
     scene = create_standard_scene(tilt_angle=tilt_angle, solar_elevation=solar_elevation, solar_azimuth=solar_azimuth,
                                   solar_spectrum_function=solar_spectrum_function)
 
-    logger.info(f"Starting ray-tracing with {num_photons} photons (Render is {render})")
+    logger.debug(f"Starting ray-tracing with {num_photons} photons (Render is {render})")
 
     if render:
         renderer = MeshcatRenderer(wireframe=False, open_browser=False)
@@ -55,7 +57,7 @@ def run_simulation(tilt_angle: int = 0, solar_elevation: int = 30, solar_azimuth
 
     count_events = collections.Counter(finals)
     efficiency = count_events[Event.REACT] / num_photons
-    logger.info(f"*** SIMULATION ENDED *** (Efficiency was {efficiency:.3f})")
+    logger.debug(f"*** SIMULATION ENDED *** (Efficiency was {efficiency:.3f})")
     return efficiency
 
 
@@ -80,7 +82,6 @@ def surface_incident(tilt_angle: float = 30, solar_elevation: float = 30, solar_
 
 
 def evaluate_tilt_angle(tilt_angle: int, location: Location):
-    logger = logging.getLogger("pvtrace").getChild("miniplant")
     logger.info(f"Starting simulation w/ tilt angle {tilt_angle}")
 
     solar_data = solar_data_for_place_and_time(location, TIME_RANGE)
@@ -91,6 +92,7 @@ def evaluate_tilt_angle(tilt_angle: int, location: Location):
         It takes care of setting up the simulation, and fill in the relevant fields or it terminates early if the
         simulation is not deemed necessary (solar position below horizon or invalid surface fraction)
         """
+        logger.info(f"Current date/time {df.name}")
         # Ensure column existence
         df['direct_irradiation_simulation_result'] = 0
         df['surface_fraction'] = 0
@@ -137,10 +139,9 @@ if __name__ == '__main__':
     # Set loggers
     logging.getLogger('trimesh').disabled = True
     logging.getLogger('shapely.geos').disabled = True
-    logging.getLogger("pvtrace").setLevel(logging.DEBUG)
-    logger = logging.getLogger("pvtrace").getChild("miniplant")
+    logging.getLogger("pvtrace").setLevel(logging.INFO)  # use logging.DEBUG for more printouts
 
     from miniplant.locations import PLATAFORMA_SOLAR_ALMERIA
-    tilt_range = [10, 15, 20, 25, 30]
+    tilt_range = [5, 10, 15, 20, 25]
     for tilt in tilt_range:
         evaluate_tilt_angle(tilt, PLATAFORMA_SOLAR_ALMERIA)
