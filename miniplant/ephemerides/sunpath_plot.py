@@ -40,15 +40,9 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
+from miniplant.locations import LOCATIONS
 
-
-# Location: Eindhoven
-ein = Location(51.4416, 5.6497, 'Europe/Amsterdam', 17, 'Eindhoven')
-calcutta = Location(28.6, 77.2, 'Asia/Calcutta', 9, 'Calcutta')
-
-location_to_evaluate = [ein, calcutta]
-
-for location in location_to_evaluate:
+for location in LOCATIONS:
     times = pd.date_range('2019-01-01 00:00:00', '2020-01-01', closed='left', freq='H', tz=location.pytz)
     solpos = solarposition.get_solarposition(time=times, latitude=location.latitude, longitude=location.longitude)
 
@@ -59,8 +53,7 @@ for location in location_to_evaluate:
     ax.set(xlim=[0, 360])
     ax.xaxis.set_major_locator(mtick.MaxNLocator(6))
 
-    points = ax.scatter(solpos.azimuth, solpos.apparent_elevation, s=2,
-                        c=solpos.index.dayofyear, label=None)
+    points = ax.scatter(solpos.azimuth, solpos.apparent_elevation, s=2, c=solpos.index.dayofyear, label=None)
 
     # Color bar
     cbar = fig.colorbar(points, orientation="vertical")

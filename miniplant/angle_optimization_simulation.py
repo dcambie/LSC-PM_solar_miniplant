@@ -1,4 +1,6 @@
 import datetime
+import math
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -12,12 +14,17 @@ from pvlib.location import Location
 from pvtrace import *
 from pvtrace.material.utils import spherical_to_cart
 
-from solar_data import solar_data_for_place_and_time
-from scene_creator import create_standard_scene
+from miniplant.solar_data import solar_data_for_place_and_time
+from miniplant.scene_creator import create_standard_scene
 
 RAYS_PER_SIMULATIONS = 128
-LOCATION = Location(latitude=51.4416, longitude=5.6497, tz='Europe/Amsterdam', altitude=17, name='Eindhoven')
-TIME_RANGE = pd.date_range(start=datetime.datetime(2020, 1, 1), end=datetime.datetime(2020, 1, 2), freq='5H')
+
+# Yes, these are arbitrarily chosen as examples of different latitude. Sorry for Europe-centrism ;)
+
+# Run simulations with the following time range
+TIME_RANGE = pd.date_range(start=datetime.datetime(2020, 1, 1), end=datetime.datetime(2021, 1, 1), freq='0.5H')
+# Test script with this
+# TIME_RANGE = pd.date_range(start=datetime.datetime(2020, 1, 1), end=datetime.datetime(2020, 1, 2), freq='5H')
 
 
 def run_simulation(tilt_angle: int = 0, solar_elevation: int = 30, solar_azimuth: int = 180,
@@ -33,6 +40,7 @@ def run_simulation(tilt_angle: int = 0, solar_elevation: int = 30, solar_azimuth
         renderer = MeshcatRenderer(wireframe=False, open_browser=False)
         renderer.render(scene)
 
+    # SINGLE-THREADED
     # finals = []
     # for ray in scene.emit(num_photons):
     #     steps = photon_tracer.follow(scene, ray)
@@ -41,9 +49,9 @@ def run_simulation(tilt_angle: int = 0, solar_elevation: int = 30, solar_azimuth
     #     if render:
     #         renderer.add_ray_path(path)
 
+    # MULTI-THREADED
     results = scene.simulate(num_rays=num_photons)
-    all_workers_results = [item for sublist in results for item in sublist]
-    finals = [photon[-1][1] for photon in all_workers_results]
+    finals = [photon[-1][1] for photon in results]
 
     count_events = collections.Counter(finals)
     efficiency = count_events[Event.REACT] / num_photons
@@ -68,14 +76,14 @@ def surface_incident(tilt_angle: float = 30, solar_elevation: float = 30, solar_
     solar_light_normal = spherical_to_cart(np.radians(-solar_elevation + 90), np.radians(-solar_azimuth + 180))
     # And calculate their dot products
     surface_fraction = np.dot(reactor_normal, solar_light_normal)
-    return surface_fraction if surface_fraction > 0 else 0
+    return surface_fraction
 
 
-def evaluate_tilt_angle(tilt_angle: int):
+def evaluate_tilt_angle(tilt_angle: int, location: Location):
     logger = logging.getLogger("pvtrace").getChild("miniplant")
     logger.info(f"Starting simulation w/ tilt angle {tilt_angle}")
 
-    solar_data = solar_data_for_place_and_time(LOCATION, TIME_RANGE)
+    solar_data = solar_data_for_place_and_time(location, TIME_RANGE)
 
     def calculate_efficiency_for_datapoint(df) -> float:
         """
@@ -84,17 +92,17 @@ def evaluate_tilt_angle(tilt_angle: int):
         simulation is not deemed necessary (solar position below horizon or invalid surface fraction)
         """
         # Ensure column existence
-        df['efficiency'] = 0
+        df['direct_irradiation_simulation_result'] = 0
         df['surface_fraction'] = 0
-        df['efficiency_corrected'] = 0
+        df['dni_reacted'] = 0
 
-        # If spectrum is not valid (close to sunset/sunrise) skip simulation.
+        # If spectrum is not valid (close to sunset/sunrise) skip simulation. This is a SPCTRAL2 issue ;)
         if np.count_nonzero(df['spectrum']._y) == 0:
             return df
 
-        # Calculate surface fraction and exit if 0
+        # Calculate surface fraction and exit if <0, i.e. if irradiation is coming from the back of the reactor
         df['surface_fraction'] = surface_incident(tilt_angle, df['apparent_elevation'], df['azimuth'])
-        if df['surface_fraction'] == 0:
+        if df['surface_fraction'] < 0:
             return df
 
         # Create a function sampling the current solar spectrum
@@ -102,22 +110,27 @@ def evaluate_tilt_angle(tilt_angle: int):
             return df['spectrum'].sample(np.random.uniform())
 
         # Efficiency is the raw result of the simulation
-        df['efficiency'] = run_simulation(tilt_angle=tilt_angle, solar_azimuth=df['azimuth'],
-                                          solar_elevation=df['apparent_elevation'],
-                                          solar_spectrum_function=photon_factory, num_photons=RAYS_PER_SIMULATIONS)
+        df['direct_irradiation_simulation_result'] = run_simulation(tilt_angle=tilt_angle, solar_azimuth=df['azimuth'],
+                                                                    solar_elevation=df['apparent_elevation'],
+                                                                    solar_spectrum_function=photon_factory,
+                                                                    num_photons=RAYS_PER_SIMULATIONS)
 
         # To be normalized with ghi and surface fraction
-        df['efficiency_corrected'] = df['efficiency'] * df['ghi'] * df['surface_fraction']
+        dni = (df['ghi'] - df['dhi']) / math.cos(math.radians(df['apparent_elevation']))
+        # Correct for the fraction of reactor surface projected on the normal to the solar vector (W*m-2)
+        df['dni_reacted'] = df['direct_irradiation_simulation_result'] * dni * df['surface_fraction']
+
         return df
 
     start_time = time.time()
     results = solar_data.apply(calculate_efficiency_for_datapoint, axis=1)
-    print(f"Simulation ended in {(time.time() - start_time)/60:.1f} minutes!")
+    print(f"Simulation ended in {(time.time() - start_time) / 60:.1f} minutes!")
 
-    # These now include efficiency and efficiency_corrected
-    results.to_csv(f"delme/{LOCATION.name}_{tilt_angle}deg_results.csv",
-                   columns=("apparent_elevation", "azimuth", "ghi", "dhi", "efficiency", "surface_fraction",
-                            "efficiency_corrected"))
+    target_file = Path(f"simulation_results/{location.name}/{location.name}_{tilt_angle}deg_results.csv")
+    target_file.parent.mkdir(exist_ok=True)
+    # Saved CSV now include direct_irradiation_simulation_result and dni_reacted! :)
+    results.to_csv(target_file, columns=("apparent_elevation", "azimuth", "ghi", "dhi", "surface_fraction",
+                                         "direct_irradiation_simulation_result", "dni_reacted"))
 
 
 if __name__ == '__main__':
@@ -127,7 +140,7 @@ if __name__ == '__main__':
     logging.getLogger("pvtrace").setLevel(logging.DEBUG)
     logger = logging.getLogger("pvtrace").getChild("miniplant")
 
-    # tilt_range = [90, 85, 80, 75, 70, 65, 60, 55, 50, 45]
-    tilt_range = [90]
+    from miniplant.locations import PLATAFORMA_SOLAR_ALMERIA
+    tilt_range = [10, 15, 20, 25, 30]
     for tilt in tilt_range:
-        evaluate_tilt_angle(tilt)
+        evaluate_tilt_angle(tilt, PLATAFORMA_SOLAR_ALMERIA)
