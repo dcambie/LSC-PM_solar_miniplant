@@ -17,7 +17,6 @@ def solar_data_for_place_and_time(site: Location, datetime_points=pd.core.indexe
     :param datetime_points: as pandas data_range
     :return: a pd.DataFrame with all the relevant results
     """
-    export_cols = ("apparent_elevation", "azimuth", "ghi", "dhi")
 
     # Localize time if timezone is available
     local_time = datetime_points.tz_localize(site.pytz, ambiguous="NaT", nonexistent="NaT")
@@ -62,15 +61,11 @@ def solar_data_for_place_and_time(site: Location, datetime_points=pd.core.indexe
 
 
 if __name__ == '__main__':
-    # Format: lat/long, timezone, elevation, name
-    eindhoven = Location(51.4416, 5.6497, 'Europe/Amsterdam', 17, 'Eindhoven')
-
+    from miniplant.locations import EINDHOVEN
     # Time points to be calculated
-    annus_horribilis = pd.date_range(start=datetime.datetime(2020, 1, 1),
-                                     end=datetime.datetime(2021, 1, 1), freq='1H')
+    year2020 = pd.date_range(start=datetime.datetime(2020, 1, 1), end=datetime.datetime(2021, 1, 1), freq='1H')
 
     # perform calculations
-    test_df = solar_data_for_place_and_time(eindhoven, annus_horribilis)
+    test_df = solar_data_for_place_and_time(EINDHOVEN, year2020)
 
     print(test_df)  # [4449 rows x 10 columns]
-
