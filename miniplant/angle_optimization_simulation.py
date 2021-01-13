@@ -17,7 +17,7 @@ from pvtrace.material.utils import spherical_to_cart
 from miniplant.solar_data import solar_data_for_place_and_time
 from miniplant.scene_creator import create_standard_scene
 
-RAYS_PER_SIMULATIONS = 128
+RAYS_PER_SIMULATIONS = 100
 
 # Yes, these are arbitrarily chosen as examples of different latitude. Sorry for Europe-centrism ;)
 
