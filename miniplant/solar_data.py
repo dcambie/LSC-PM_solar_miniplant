@@ -43,6 +43,7 @@ def solar_data_for_place_and_time(site: Location, datetime_points=pd.core.indexe
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             wavelength, intensity = calculate_spectrum_spectral2(stateObject=spectral2_input, power_density_in_nm=True)
+
             # Add spectrum to list (trimmed to UV-VIS) [in particular 10-37 is 360--690 nm]
             spectra.append(Distribution(wavelength[10:37], intensity[10:37]))
     spectra = pd.DataFrame(data=spectra, columns=["spectrum"], index=local_time)
@@ -62,11 +63,24 @@ def solar_data_for_place_and_time(site: Location, datetime_points=pd.core.indexe
 
 
 if __name__ == '__main__':
-    from miniplant.locations import EINDHOVEN
+    from miniplant.locations import NORTH_CAPE
     # Time points to be calculated
-    year2020 = pd.date_range(start=datetime.datetime(2020, 1, 1), end=datetime.datetime(2021, 1, 1), freq='1H')
+    year2020 = pd.date_range(start=datetime.datetime(2020, 3, 30), end=datetime.datetime(2020, 4, 1), freq='0.5H')
 
     # perform calculations
-    test_df = solar_data_for_place_and_time(EINDHOVEN, year2020)
+    test_df = solar_data_for_place_and_time(NORTH_CAPE, year2020)
 
-    print(test_df)  # [4449 rows x 10 columns]
+    print(test_df)
+
+    # Test specific time date
+    spectral2_input = get_default_spectral2_object()
+    spectral2_input["latitude"] = math.radians(NORTH_CAPE.latitude)
+    spectral2_input["longitude"] = math.radians(NORTH_CAPE.longitude)
+    spectral2_input["dateAndTime"] = datetime.datetime(2020, 2, 28, 12, 00)
+
+    wl, inten = calculate_spectrum_spectral2(stateObject=spectral2_input, power_density_in_nm=True)
+
+    import matplotlib.pyplot as plt
+    plt.figure()
+    plt.scatter(wl, inten)
+    plt.show()
