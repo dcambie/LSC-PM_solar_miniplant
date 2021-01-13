@@ -34,7 +34,7 @@ for location in LOCATIONS:
 
         # Yearly total for this tilt angle
         x.append(angle)
-        y.append(df['efficiency_corrected'].sum())
+        y.append(df['dni_reacted'].sum())
 
     # Skip plot if no data are available
     if len(y) == 0:

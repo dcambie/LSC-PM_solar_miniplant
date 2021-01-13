@@ -34,7 +34,7 @@ for location in LOCATIONS:
         daily = df.resample('D').sum()
 
         # Plot efficiency
-        plt.plot(daily.index, daily["efficiency_corrected"], label=f"{angle} deg")
+        plt.plot(daily.index, daily["dni_reacted"], label=f"{angle} deg")
         # Add legend
         plt.legend(loc="upper right")
 
