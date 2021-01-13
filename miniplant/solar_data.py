@@ -1,3 +1,4 @@
+import math
 import datetime
 import logging
 import warnings
@@ -32,8 +33,8 @@ def solar_data_for_place_and_time(site: Location, datetime_points=pd.core.indexe
 
     # get default stateObject for spectral2 calculation and customize it
     spectral2_input = get_default_spectral2_object()
-    spectral2_input["latitude"] = site.latitude
-    spectral2_input["longitude"] = site.longitude
+    spectral2_input["latitude"] = math.radians(site.latitude)
+    spectral2_input["longitude"] = math.radians(site.longitude)
 
     for date_and_time in datetime_points:
         spectral2_input["dateAndTime"] = date_and_time.to_pydatetime()
