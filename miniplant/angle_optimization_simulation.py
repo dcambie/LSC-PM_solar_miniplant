@@ -31,7 +31,7 @@ logger = logging.getLogger("pvtrace").getChild("miniplant")
 
 def run_simulation(tilt_angle: int = 0, solar_elevation: int = 30, solar_azimuth: int = 180,
                    solar_spectrum_function: Callable = lambda: 555,
-                   num_photons: int = 100, render: bool = False) -> float:
+                   num_photons: int = 100, render: bool = False, workers: int = None) -> float:
     # Create scene with the provided parameters
     scene = create_standard_scene(tilt_angle=tilt_angle, solar_elevation=solar_elevation, solar_azimuth=solar_azimuth,
                                   solar_spectrum_function=solar_spectrum_function)
@@ -52,7 +52,7 @@ def run_simulation(tilt_angle: int = 0, solar_elevation: int = 30, solar_azimuth
     #         renderer.add_ray_path(path)
 
     # MULTI-THREADED
-    results = scene.simulate(num_rays=num_photons)
+    results = scene.simulate(num_rays=num_photons, workers=workers)
     finals = [photon[-1][1] for photon in results]
 
     count_events = collections.Counter(finals)
@@ -81,7 +81,7 @@ def surface_incident(tilt_angle: float = 30, solar_elevation: float = 30, solar_
     return surface_fraction
 
 
-def evaluate_tilt_angle(tilt_angle: int, location: Location):
+def evaluate_tilt_angle(tilt_angle: int, location: Location, workers: int = None):
     logger.info(f"Starting simulation w/ tilt angle {tilt_angle}")
 
     solar_data = solar_data_for_place_and_time(location, TIME_RANGE)
@@ -115,7 +115,7 @@ def evaluate_tilt_angle(tilt_angle: int, location: Location):
         df['direct_irradiation_simulation_result'] = run_simulation(tilt_angle=tilt_angle, solar_azimuth=df['azimuth'],
                                                                     solar_elevation=df['apparent_elevation'],
                                                                     solar_spectrum_function=photon_factory,
-                                                                    num_photons=RAYS_PER_SIMULATIONS)
+                                                                    num_photons=RAYS_PER_SIMULATIONS, workers=workers)
 
         # To be normalized with ghi and surface fraction
         dni = (df['ghi'] - df['dhi']) / math.cos(math.radians(df['apparent_elevation']))
@@ -141,7 +141,7 @@ if __name__ == '__main__':
     logging.getLogger('shapely.geos').disabled = True
     logging.getLogger("pvtrace").setLevel(logging.INFO)  # use logging.DEBUG for more printouts
 
-    from miniplant.locations import PLATAFORMA_SOLAR_ALMERIA
-    tilt_range = [5, 10, 15, 20, 25]
+    from miniplant.locations import EINDHOVEN
+    tilt_range = [75, 80, 85, 90]
     for tilt in tilt_range:
-        evaluate_tilt_angle(tilt, PLATAFORMA_SOLAR_ALMERIA)
+        evaluate_tilt_angle(tilt, EINDHOVEN, workers=4)
