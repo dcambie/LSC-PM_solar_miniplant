@@ -1,3 +1,7 @@
+"""
+Performs a screening for the yearly performance of a LSC-PM with different tilt angles at a given location.
+"""
+
 import datetime
 import math
 from pathlib import Path
