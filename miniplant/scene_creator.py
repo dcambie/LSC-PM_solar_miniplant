@@ -4,7 +4,7 @@ from typing import Callable
 import pandas as pd
 import numpy as np
 
-from pvtrace import Node, Box, Sphere, Material, Luminophore, Absorber, Cylinder, Reactor, Light, Scene, Distribution
+from pvtrace import Node, Box, Sphere, Material, Luminophore, Absorber, Cylinder, Reactor, Light, Scene
 from pvtrace import isotropic, rectangular_mask
 
 from pvtrace.geometry.transformations import rotation_matrix
@@ -30,7 +30,7 @@ def create_standard_scene(tilt_angle: float = 30, solar_elevation: float = 30, s
 
     logger = logging.getLogger("pvtrace").getChild("miniplant")
     logger.debug(f"Creating simulation scene w/ angle={tilt_angle}deg solar elevation={solar_elevation:.2f}, "
-                f"solar azimuth={solar_azimuth:.2f}...")
+                 f"solar azimuth={solar_azimuth:.2f}...")
 
     # Add nodes to the scene graph
     # Let's start with world - i.e. outer bounds
