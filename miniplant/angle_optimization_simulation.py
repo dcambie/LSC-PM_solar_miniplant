@@ -85,6 +85,15 @@ def surface_incident(tilt_angle: float = 30, solar_elevation: float = 30, solar_
     return surface_fraction
 
 
+class PhotonFactory:
+    """ Create a callable sampling the current solar spectrum """
+    def __init__(self, spectrum):
+        self.spectrum = spectrum
+
+    def __call__(self, *args, **kwargs):
+        return self.spectrum.sample(np.random.uniform())
+
+
 def evaluate_tilt_angle(tilt_angle: int, location: Location, workers: int = None):
     logger.info(f"Starting simulation w/ tilt angle {tilt_angle}")
 
@@ -112,8 +121,7 @@ def evaluate_tilt_angle(tilt_angle: int, location: Location, workers: int = None
             return df
 
         # Create a function sampling the current solar spectrum
-        def photon_factory() -> float:
-            return df['spectrum'].sample(np.random.uniform())
+        photon_factory = PhotonFactory(df['spectrum'])
 
         # Efficiency is the raw result of the simulation
         df['direct_irradiation_simulation_result'] = run_simulation(tilt_angle=tilt_angle, solar_azimuth=df['azimuth'],

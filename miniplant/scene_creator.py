@@ -25,6 +25,29 @@ ACN_RI = 1.344
 INCH = 0.0254  # meters
 
 
+class VectorInverter:
+    def __init__(self, vector):
+        self.vector = vector
+
+    def __call__(self, *args, **kwargs):
+        return tuple(-value for value in self.vector)
+
+
+class LightPosition:
+    def __init__(self, tilt_angle):
+        self.tilt_angle = tilt_angle
+        pass
+
+    def __call__(self, *args, **kwargs):
+        position = rectangular_mask(0.47 / 2, 0.47 / 2)
+        matrix = np.linalg.inv(rotation_matrix(np.radians(-self.tilt_angle), (0, 1, 0)))
+
+        homogeneous_pt = np.ones(4)
+        homogeneous_pt[0:3] = position
+        new_pt = np.dot(matrix, homogeneous_pt)[0:3]
+        return tuple(new_pt)
+
+
 def create_standard_scene(tilt_angle: float = 30, solar_elevation: float = 30, solar_azimuth: float = 180,
                           solar_spectrum_function: Callable = lambda: 555) -> Scene:
 
@@ -107,21 +130,12 @@ def create_standard_scene(tilt_angle: float = 30, solar_elevation: float = 30, s
         # Adjust capillary position
         capillary[-1].translate((-0.47/2+0.01+0.03*capillary_num, 0, 0))
 
-    # Generates the light position vector. It needs tilt angle therefore is defined locally as a closure. How elegant :)
-    def light_position():
-        position = rectangular_mask(0.47/2, 0.47/2)
-        matrix = np.linalg.inv(rotation_matrix(np.radians(-tilt_angle), (0, 1, 0)))
-
-        homogeneous_pt = np.ones(4)
-        homogeneous_pt[0:3] = position
-        new_pt = np.dot(matrix, homogeneous_pt)[0:3]
-        return tuple(new_pt)
+    light_position = LightPosition(tilt_angle=tilt_angle)
 
     # Define rays direction based on solar position
     solar_light_vector = spherical_to_cart(np.radians(-solar_elevation + 90), np.radians(-solar_azimuth + 180))
 
-    def reversed_solar_light_vector():
-        return tuple(-value for value in solar_light_vector)
+    reversed_solar_light_vector = VectorInverter(solar_light_vector)
 
     # Create light
     solar_light = Node(
