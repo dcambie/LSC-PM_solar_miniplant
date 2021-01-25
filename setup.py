@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="miniplant", # Replace with your own username
+    name="miniplant",
     version="0.9.1",
     author="Dario Cambie",
     author_email="dario.cambie@mpikg.mpg.de",
