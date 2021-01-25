@@ -6,6 +6,13 @@ import datetime
 import math
 from pathlib import Path
 
+import os
+# Forcing numpy to single thread results in better multiprocessing performance.
+# See pvtrace issue #48
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+os.environ["OMP_NUM_THREADS"] = "1"
+
 import numpy as np
 import pandas as pd
 import logging
