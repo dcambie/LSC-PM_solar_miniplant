@@ -147,7 +147,7 @@ def evaluate_tilt_angle(tilt_angle: int, location: Location, workers: int = None
     results = solar_data.apply(calculate_efficiency_for_datapoint, axis=1)
     print(f"Simulation ended in {(time.time() - start_time) / 60:.1f} minutes!")
 
-    target_file = Path(f"simulation_results/{location.name}/{location.name}_{tilt_angle}deg_results.csv")
+    target_file = Path(f"simulation_results/{location.name}/{location.name}_{np.abs(tilt_angle)}deg_results.csv")
     target_file.parent.mkdir(exist_ok=True)
     # Saved CSV now include direct_irradiation_simulation_result and dni_reacted! :)
     results.to_csv(target_file, columns=("apparent_elevation", "azimuth", "ghi", "dhi", "surface_fraction",
