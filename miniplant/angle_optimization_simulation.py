@@ -137,7 +137,7 @@ def evaluate_tilt_angle(tilt_angle: int, location: Location, workers: int = None
                                                                     num_photons=RAYS_PER_SIMULATIONS, workers=workers)
 
         # To be normalized with ghi and surface fraction
-        dni = (df['ghi'] - df['dhi']) / math.cos(math.radians(df['apparent_elevation']))
+        dni = (df['ghi'] - df['dhi']) / math.cos(math.radians(90-df['apparent_elevation']))
         # Correct for the fraction of reactor surface projected on the normal to the solar vector (W*m-2)
         df['dni_reacted'] = df['direct_irradiation_simulation_result'] * dni * df['surface_fraction']
 
