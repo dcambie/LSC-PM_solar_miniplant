@@ -23,7 +23,7 @@ for angle in angles:
         del df['efficiency_corrected']
 
         # Get DNI from GHI and DHI [GHI = DHI + DNI * Cos(elevation)]
-        dni = (df['ghi'] - df['dhi']) / math.cos(math.radians(df['apparent_elevation']))
+        dni = (df['ghi'] - df['dhi']) / math.cos(math.radians(90-df['apparent_elevation']))
         df['dni_reacted'] = df['direct_irradiation_simulation_result'] * dni * df['surface_fraction']
 
         return df
