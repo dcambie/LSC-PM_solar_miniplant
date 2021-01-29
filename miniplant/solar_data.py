@@ -5,6 +5,11 @@ import datetime
 import logging
 
 import pandas as pd
+import numpy as np
+import scipy.integrate as integrate
+
+import matplotlib.pyplot as plt
+
 
 from pvtrace import Distribution
 from pvlib.location import Location
@@ -38,9 +43,16 @@ def solar_data_for_place_and_time(site: Location, datetime_points: pd.core.index
     # Solar position
     sol_pos: pd.DataFrame = site.get_solarposition(times=local_time)
 
+    # Clear sky irradiance replaced with integral over spctral2 ROI
+    clearsky_irradiance = site.get_clearsky(times=local_time, solar_position=sol_pos)
+
     # Relative Air Mass
     relative_airmass: pd.DataFrame = site.get_airmass(times=local_time, solar_position=sol_pos)
-    solar_data = pd.concat([sol_pos, relative_airmass], axis=1)
+    solar_data = pd.concat([sol_pos, relative_airmass, clearsky_irradiance], axis=1)
+    # print(solar_data.columns)
+    # ['apparent_zenith', 'zenith', 'apparent_elevation', 'elevation',
+    #        'azimuth', 'equation_of_time', 'airmass_relative', 'airmass_absolute',
+    #        'ghi', 'dni', 'dhi']
 
     def calculate_spectrum(df):
         """ Calculate diffuse and direct spectra for every time point at the given location and tilt angle """
@@ -58,6 +70,12 @@ def solar_data_for_place_and_time(site: Location, datetime_points: pd.core.index
         df['diffuse_spectrum'] = Distribution(solar_spectrum['wavelength'][10:37],
                                               solar_spectrum['poa_sky_diffuse'][10:37])
 
+        # x = solar_spectrum['wavelength']
+        # y = np.squeeze(solar_spectrum['dni'])
+        # y2 = np.squeeze(solar_spectrum['dhi'])
+        # df["dni_spctral"] = integrate.trapz(y, x)
+        # df["dhi_spctral"] = integrate.trapz(y2, x)
+
         return df
 
     # Filter date-time point where the sun is above the horizon. Guess why ;)
@@ -67,9 +85,15 @@ def solar_data_for_place_and_time(site: Location, datetime_points: pd.core.index
     solar_data = solar_data.apply(calculate_spectrum, axis=1)
     print(solar_data.columns)
 
+
+    fig, (ax1, ax2) = plt.subplots(1,2)
+    ax1.scatter(solar_data['dni'], solar_data['dni_spctral'])
+    ax2.scatter(solar_data['dhi'], solar_data['dhi_spctral'])
+    plt.show()
+
     # Export to CSV
     solar_data.to_csv(f"Full_data_{site.name}.csv", columns=('apparent_zenith', 'zenith', 'apparent_elevation', 'elevation',
-       'azimuth', 'airmass_relative', 'aoi'))
+       'azimuth', 'airmass_relative', 'aoi', 'dni', 'dhi', 'dni_spctral', 'dhi_spctral'))
 
     logger = logging.getLogger("pvtrace").getChild("miniplant")
     logger.info(f"Generated solar data for {site.name} [lat. {site.latitude}, long. {site.longitude}] in the time range"
