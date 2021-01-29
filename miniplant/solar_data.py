@@ -1,65 +1,81 @@
-import math
+""""
+Calculate solar irradiance and spectrum incident on reactor at given position/time/tilt
+"""
 import datetime
 import logging
-import warnings
 
 import pandas as pd
 
 from pvtrace import Distribution
 from pvlib.location import Location
-from solcore.light_source import calculate_spectrum_spectral2, get_default_spectral2_object
+from pvlib import spectrum, solarposition, irradiance, atmosphere
+# from solcore.light_source import calculate_spectrum_spectral2, get_default_spectral2_object
+import solcore.light_source.smarts
+
+# assumptions
+water_vapor_content = 0.5  # cm
+tau500 = 0.1
+ozone = 0.31  # atm-cm
+albedo = 0.2
 
 
-def solar_data_for_place_and_time(site: Location, datetime_points=pd.core.indexes.datetimes.DatetimeIndex) -> pd.core.frame.DataFrame:
+def solar_data_for_place_and_time(site: Location, datetime_points: pd.core.indexes.datetimes.DatetimeIndex,
+                                  tilt_angle: int) -> pd.core.frame.DataFrame:
     """
     Given a Location object and a series of datetime points calculates relevant solar position and spectral distribution
 
     :param site: pvlib.location.Location object
     :param datetime_points: as pandas data_range
+    :param tilt_angle: reactor tilt angle, used to calculate angle of incidence
     :return: a pd.DataFrame with all the relevant results
     """
+    # Pressure based on site altitude
+    pressure = atmosphere.alt2pres(site.altitude)
 
     # Localize time if timezone is available
     local_time = datetime_points.tz_localize(site.pytz, ambiguous="NaT", nonexistent="NaT")
 
     # Solar position
-    ephemeridis = site.get_solarposition(local_time)
+    sol_pos: pd.DataFrame = site.get_solarposition(times=local_time)
 
-    # Clear sky irradiance
-    clearsky = site.get_clearsky(local_time)
+    # Relative Air Mass
+    relative_airmass: pd.DataFrame = site.get_airmass(times=local_time, solar_position=sol_pos)
+    solar_data = pd.concat([sol_pos, relative_airmass], axis=1)
 
-    # Spectral distribution
-    spectra = []
+    def calculate_spectrum(df):
+        """ Calculate diffuse and direct spectra for every time point at the given location and tilt angle """
+        df['aoi'] = irradiance.aoi(surface_tilt=tilt_angle, surface_azimuth=180, solar_zenith=df["apparent_zenith"],
+                                   solar_azimuth=df["azimuth"])
 
-    # get default stateObject for spectral2 calculation and customize it
-    spectral2_input = get_default_spectral2_object()
-    spectral2_input["latitude"] = math.radians(site.latitude)
-    spectral2_input["longitude"] = math.radians(site.longitude)
+        solar_spectrum = spectrum.spectrl2(apparent_zenith=df["apparent_zenith"], aoi=df['aoi'],
+                                           surface_tilt=tilt_angle, ground_albedo=albedo, surface_pressure=pressure,
+                                           relative_airmass=df['airmass_relative'],
+                                           precipitable_water=water_vapor_content, ozone=ozone,
+                                           aerosol_turbidity_500nm=tau500, dayofyear=df.name.dayofyear)
 
-    for date_and_time in datetime_points:
-        spectral2_input["dateAndTime"] = date_and_time.to_pydatetime()
+        # Add spectra to dataframe (trimmed to UV-VIS) [in particular 10-37 is 360--690 nm]
+        df['direct_spectrum'] = Distribution(solar_spectrum['wavelength'][10:37], solar_spectrum['dni'][10:37])
+        df['diffuse_spectrum'] = Distribution(solar_spectrum['wavelength'][10:37],
+                                              solar_spectrum['poa_sky_diffuse'][10:37])
 
-        # datetime close to sunrise/sunset give invalid spectra. Catch warning related to that
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            wavelength, intensity = calculate_spectrum_spectral2(stateObject=spectral2_input, power_density_in_nm=True)
+        return df
 
-            # Add spectrum to list (trimmed to UV-VIS) [in particular 10-37 is 360--690 nm]
-            spectra.append(Distribution(wavelength[10:37], intensity[10:37]))
-    spectra = pd.DataFrame(data=spectra, columns=["spectrum"], index=local_time)
+    # Filter date-time point where the sun is above the horizon. Guess why ;)
+    solar_data.query('apparent_elevation>0', inplace=True)
 
-    # Merge ephemeridis, clear sky and solar spectra into a single dataframe
-    calculation_results = pd.concat([ephemeridis, clearsky, spectra], axis=1)
-    # Filter points with sun above horizon
-    calculation_results.query('apparent_elevation>0', inplace=True)
+    # Calculate spectra (diffuse and direct incident on reactor) per each data-time point
+    solar_data = solar_data.apply(calculate_spectrum, axis=1)
+    print(solar_data.columns)
+
     # Export to CSV
-    # calculation_results.to_csv(f"Full_data_{site.name}.csv", columns=("apparent_elevation", "azimuth", "ghi", "dhi"))
+    solar_data.to_csv(f"Full_data_{site.name}.csv", columns=('apparent_zenith', 'zenith', 'apparent_elevation', 'elevation',
+       'azimuth', 'airmass_relative', 'aoi'))
 
     logger = logging.getLogger("pvtrace").getChild("miniplant")
     logger.info(f"Generated solar data for {site.name} [lat. {site.latitude}, long. {site.longitude}] in the time range"
                 f" {datetime_points.min().isoformat()} -- {datetime_points.max().isoformat()}")
 
-    return calculation_results
+    return solar_data
 
 
 if __name__ == '__main__':
@@ -68,19 +84,7 @@ if __name__ == '__main__':
     year2020 = pd.date_range(start=datetime.datetime(2020, 3, 30), end=datetime.datetime(2020, 4, 1), freq='0.5H')
 
     # perform calculations
-    test_df = solar_data_for_place_and_time(NORTH_CAPE, year2020)
+    test_df = solar_data_for_place_and_time(NORTH_CAPE, year2020, 30)
 
     print(test_df)
 
-    # Test specific time date
-    spectral2_input = get_default_spectral2_object()
-    spectral2_input["latitude"] = math.radians(NORTH_CAPE.latitude)
-    spectral2_input["longitude"] = math.radians(NORTH_CAPE.longitude)
-    spectral2_input["dateAndTime"] = datetime.datetime(2020, 2, 28, 12, 00)
-
-    wl, inten = calculate_spectrum_spectral2(stateObject=spectral2_input, power_density_in_nm=True)
-
-    import matplotlib.pyplot as plt
-    plt.figure()
-    plt.scatter(wl, inten)
-    plt.show()
