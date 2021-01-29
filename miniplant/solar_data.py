@@ -70,11 +70,11 @@ def solar_data_for_place_and_time(site: Location, datetime_points: pd.core.index
         df['diffuse_spectrum'] = Distribution(solar_spectrum['wavelength'][10:37],
                                               solar_spectrum['poa_sky_diffuse'][10:37])
 
-        # x = solar_spectrum['wavelength']
-        # y = np.squeeze(solar_spectrum['dni'])
-        # y2 = np.squeeze(solar_spectrum['dhi'])
-        # df["dni_spctral"] = integrate.trapz(y, x)
-        # df["dhi_spctral"] = integrate.trapz(y2, x)
+        x = solar_spectrum['wavelength']
+        y = np.squeeze(solar_spectrum['dni'])
+        y2 = np.squeeze(solar_spectrum['dhi'])
+        df["dni_spctral"] = integrate.trapz(y, x)
+        df["dhi_spctral"] = integrate.trapz(y2, x)
 
         return df
 
@@ -90,6 +90,7 @@ def solar_data_for_place_and_time(site: Location, datetime_points: pd.core.index
     ax1.scatter(solar_data['dni'], solar_data['dni_spctral'])
     ax2.scatter(solar_data['dhi'], solar_data['dhi_spctral'])
     plt.show()
+    plt.savefig("comparison_spectral_get_clearsky.png")
 
     # Export to CSV
     solar_data.to_csv(f"Full_data_{site.name}.csv", columns=('apparent_zenith', 'zenith', 'apparent_elevation', 'elevation',
