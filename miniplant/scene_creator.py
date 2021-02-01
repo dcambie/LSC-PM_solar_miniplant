@@ -1,14 +1,15 @@
 import logging
-from typing import Callable
+from typing import Callable, Tuple
 
 import pandas as pd
 import numpy as np
 
 from pvtrace import Node, Box, Sphere, Material, Luminophore, Absorber, Cylinder, Reactor, Light, Scene
 from pvtrace import isotropic, rectangular_mask
-
-from pvtrace.geometry.transformations import rotation_matrix
+from pvtrace.geometry.transformations import rotation_matrix, translation_matrix
 from pvtrace.material.utils import spherical_to_cart
+
+from pvlib import irradiance
 
 
 # Experimental data
@@ -46,6 +47,47 @@ class LightPosition:
         homogeneous_pt[0:3] = position
         new_pt = np.dot(matrix, homogeneous_pt)[0:3]
         return tuple(new_pt)
+
+
+class RandomPositionandDirection:
+    tilt_angle = 0
+    last_direction = None
+
+    def __init__(self, tilt_angle):
+        RandomPositionandDirection.tilt_angle = tilt_angle
+        RandomPositionandDirection.base_position = LightPosition(tilt_angle)
+
+    @classmethod
+    def position(cls):
+        """ For diffuse simulation position and direction are related and need to be set together """
+        position = RandomPositionandDirection.base_position()
+        direction = create_diffuse_photon(RandomPositionandDirection.tilt_angle)
+        position += direction  # Translate position to ensure origin is not on reactor surface (+ visualization reasons)
+        RandomPositionandDirection.last_direction = direction
+        return position
+
+    @classmethod
+    def direction(cls):
+        """ Just return the cached value for direction.
+         NOTE: THIS IS UGLY AND RELIES ON THE FACT THAT PVTRACE FIRST ASK FOR POSITION AND THEN FOR DIRECTION! """
+        return tuple(-value for value in RandomPositionandDirection.last_direction)
+
+
+def create_diffuse_photon(tilt_angle: int = 30) -> Tuple[Callable, Callable]:
+    # Keep on generating random photons until they are on the right side of the reactor
+    # This is correct because poa_diffuse already takes into account the tilt angle! ;)
+    is_angle_valid = False
+    while is_angle_valid is False:
+        # Random point in the half-sphere
+        random_azimuth = np.random.rand() * 360
+        random_zenith = np.random.rand() * 90
+
+        aoi_projection = irradiance.aoi_projection(surface_tilt=tilt_angle, surface_azimuth=180,
+                                                   solar_zenith=random_zenith, solar_azimuth=random_azimuth)
+        # Accept angle if the projection is positive, i.e. reactor front face
+        is_angle_valid = aoi_projection > 0
+
+    return spherical_to_cart(theta=np.deg2rad(random_zenith), phi=np.deg2rad(random_azimuth))
 
 
 def _create_scene_common(tilt_angle, light_source) -> Scene:
@@ -142,10 +184,8 @@ def create_direct_scene(tilt_angle: float = 30, solar_elevation: float = 30, sol
                         solar_spectrum_function: Callable = lambda: 555) -> Scene:
     """ Create a scene with a fixed light position and direction, to match direct irradiation """
 
-    light_position = LightPosition(tilt_angle=tilt_angle)
-
     # Define rays direction based on solar position
-    solar_light_vector = spherical_to_cart(np.radians(-solar_elevation + 90), np.radians(-solar_azimuth + 180))
+    solar_light_vector = spherical_to_cart(np.deg2rad(-solar_elevation + 90), np.deg2rad(-solar_azimuth + 180))
 
     reversed_solar_light_vector = VectorInverter(solar_light_vector)
 
@@ -155,7 +195,7 @@ def create_direct_scene(tilt_angle: float = 30, solar_elevation: float = 30, sol
         light=Light(
             wavelength=solar_spectrum_function,
             direction=reversed_solar_light_vector,
-            position=light_position
+            position=LightPosition(tilt_angle=tilt_angle)
         ),
         parent=None
     )
@@ -166,12 +206,15 @@ def create_direct_scene(tilt_angle: float = 30, solar_elevation: float = 30, sol
 
 def create_diffuse_scene(tilt_angle: float = 30, solar_spectrum_function: Callable = lambda: 555):
     """ Create a scene with a random light position, to match diffuse irradiation """
+
+    uffa = RandomPositionandDirection(tilt_angle)
+
     solar_light = Node(
         name="Solar Light",
         light=Light(
             wavelength=solar_spectrum_function,
-            direction=lambda: (1, 0, 0),
-            position=lambda: (1, 0, 0)
+            direction=uffa.direction,
+            position=uffa.position
         ),
         parent=None
     )

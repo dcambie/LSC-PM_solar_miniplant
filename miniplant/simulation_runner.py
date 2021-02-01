@@ -55,3 +55,9 @@ def run_diffuse_simulation(tilt_angle: int = 0, solar_spectrum_function: Callabl
     # Create scene with the provided parameters
     scene = create_diffuse_scene(tilt_angle=tilt_angle, solar_spectrum_function=solar_spectrum_function)
     return _common_simulation_runner(scene, num_photons, render, workers)
+
+
+if __name__ == '__main__':
+    run_diffuse_simulation(tilt_angle=60, render=True, workers=1)
+    # run_direct_simulation(tilt_angle=10, render=True, workers=1)
+    input()
