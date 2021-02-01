@@ -8,24 +8,22 @@ import pandas as pd
 import numpy as np
 import scipy.integrate as integrate
 
-import matplotlib.pyplot as plt
-
-
 from pvtrace import Distribution
+
 from pvlib.location import Location
-from pvlib import spectrum, solarposition, irradiance, atmosphere
-# from solcore.light_source import calculate_spectrum_spectral2, get_default_spectral2_object
-import solcore.light_source.smarts
+from pvlib import spectrum, irradiance, atmosphere
 
 # assumptions
+from miniplant.irradiance_to_photon_flux import spectral_distribution_to_photon_distribution
+
 water_vapor_content = 0.5  # cm
 tau500 = 0.1
 ozone = 0.31  # atm-cm
 albedo = 0.2
 
 
-def solar_data_for_place_and_time(site: Location, datetime_points: pd.core.indexes.datetimes.DatetimeIndex,
-                                  tilt_angle: int) -> pd.core.frame.DataFrame:
+def solar_data_for_place_and_time(site: Location, datetime_points: pd.DatetimeIndex,
+                                  tilt_angle: int) -> pd.DataFrame:
     """
     Given a Location object and a series of datetime points calculates relevant solar position and spectral distribution
 
@@ -37,14 +35,11 @@ def solar_data_for_place_and_time(site: Location, datetime_points: pd.core.index
     # Pressure based on site altitude
     pressure = atmosphere.alt2pres(site.altitude)
 
-    # Localize time if timezone is available
-    local_time = datetime_points.tz_localize(site.pytz, ambiguous="NaT", nonexistent="NaT")
-
     # Solar position
-    sol_pos: pd.DataFrame = site.get_solarposition(times=local_time)
+    sol_pos: pd.DataFrame = site.get_solarposition(times=datetime_points)
 
     # Relative Air Mass
-    relative_airmass: pd.DataFrame = site.get_airmass(times=local_time, solar_position=sol_pos)
+    relative_airmass: pd.DataFrame = site.get_airmass(times=datetime_points, solar_position=sol_pos)
     solar_data = pd.concat([sol_pos, relative_airmass], axis=1)
     # print(solar_data.columns)
     # ['apparent_zenith', 'zenith', 'apparent_elevation', 'elevation',
@@ -74,13 +69,15 @@ def solar_data_for_place_and_time(site: Location, datetime_points: pd.core.index
 
         # Add solar spectra for diffuse and direct to dataframe (trimmed to UV-VIS) [in particular 10-37 is 360--690 nm]
         try:
-            df['direct_spectrum'] = Distribution(solar_spectrum['wavelength'][10:37],
-                                                 np.squeeze(solar_spectrum['poa_direct'][10:37]))
-            df['diffuse_spectrum'] = Distribution(solar_spectrum['wavelength'][10:37],
-                                                  np.squeeze(solar_spectrum['poa_sky_diffuse'][10:37]))
+            direct = Distribution(solar_spectrum['wavelength'][10:37], np.squeeze(solar_spectrum['poa_direct'][10:37]))
+            diffuse = Distribution(solar_spectrum['wavelength'][10:37],
+                                   np.squeeze(solar_spectrum['poa_sky_diffuse'][10:37]))
         except ValueError:
             # When the sun is behind the array the sign of AoI dot product becomes negative. We skip those time point ;)
             return df
+
+        df['direct_spectrum'] = spectral_distribution_to_photon_distribution(direct)
+        df['diffuse_spectrum'] = spectral_distribution_to_photon_distribution(diffuse)
 
         # Calculate irradiance from spectral results in the spectral range of interest for simulations (see note above)
         df["direct_irradiance"] = integrate.trapz(df['direct_spectrum']._y, df['direct_spectrum']._x)
@@ -93,12 +90,16 @@ def solar_data_for_place_and_time(site: Location, datetime_points: pd.core.index
 
     # Calculate spectra (diffuse and direct incident on reactor) per each data-time point
     solar_data = solar_data.apply(calculate_spectrum, axis=1)
-    # print(solar_data.columns)
+
+    # This removes time points where the irradiation is on the back of the reactor, see ValueError caught above
+    solar_data.query('direct_irradiance>0', inplace=True)
 
     # Export to CSV
-    solar_data.to_csv(f"Full_data_{site.name}.csv", columns=('apparent_zenith', 'zenith', 'apparent_elevation', 'elevation',
-       'azimuth', 'airmass_relative', 'aoi', 'direct_irradiance', 'diffuse_irradiance', 'direct_spectrum', 'diffuse_spectrum'))
+    solar_data.to_csv(f"Full_data_{site.name}.csv", columns=('apparent_zenith', 'zenith', 'apparent_elevation',
+                                                             'elevation', 'azimuth', 'airmass_relative', 'aoi',
+                                                             'direct_irradiance', 'diffuse_irradiance'))
 
+    # Logging
     logger = logging.getLogger("pvtrace").getChild("miniplant")
     logger.info(f"Generated solar data for {site.name} [lat. {site.latitude}, long. {site.longitude}] in the time range"
                 f" {datetime_points.min().isoformat()} -- {datetime_points.max().isoformat()}")

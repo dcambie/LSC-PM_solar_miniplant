@@ -25,12 +25,9 @@ ACN_RI = 1.344
 INCH = 0.0254  # meters
 
 
-def create_standard_scene(tilt_angle: float = 30, solar_elevation: float = 30, solar_azimuth: float = 180,
-                          solar_spectrum_function: Callable = lambda: 555) -> Scene:
-
+def _create_scene_common(tilt_angle: float = 30, light_source) -> Scene:
     logger = logging.getLogger("pvtrace").getChild("miniplant")
-    logger.debug(f"Creating simulation scene w/ angle={tilt_angle}deg solar elevation={solar_elevation:.2f}, "
-                 f"solar azimuth={solar_azimuth:.2f}...")
+    logger.debug(f"Creating simulation scene w/ angle={tilt_angle}deg...")
 
     # Add nodes to the scene graph
     # Let's start with world - i.e. outer bounds
@@ -38,6 +35,9 @@ def create_standard_scene(tilt_angle: float = 30, solar_elevation: float = 30, s
         name="World (air)",
         geometry=Sphere(radius=10.0, material=Material(refractive_index=1.0))
     )
+
+    # Bind the light source to the current world
+    light_source.parent = world
 
     # LSC object
     reactor = Node(
@@ -75,7 +75,7 @@ def create_standard_scene(tilt_angle: float = 30, solar_elevation: float = 30, s
                 name=f"Capillary_PFA_{capillary_num}",
                 geometry=Cylinder(
                     length=0.47,
-                    radius=(1/8*INCH)/2,
+                    radius=(1 / 8 * INCH) / 2,
                     material=Material(
                         refractive_index=PFA_RI,
                         components=[
@@ -92,7 +92,7 @@ def create_standard_scene(tilt_angle: float = 30, solar_elevation: float = 30, s
                 name=f"Reaction_mixture_{capillary_num}",
                 geometry=Cylinder(
                     length=0.47,
-                    radius=(1/16*INCH)/2,
+                    radius=(1 / 16 * INCH) / 2,
                     material=Material(
                         refractive_index=ACN_RI,
                         components=[reaction_mixture_material]
@@ -105,9 +105,20 @@ def create_standard_scene(tilt_angle: float = 30, solar_elevation: float = 30, s
         # Rotate capillary (w/ r_mix) so that is in LSC (default is Z axis)
         capillary[-1].rotate(np.radians(90), (1, 0, 0))
         # Adjust capillary position
-        capillary[-1].translate((-0.47/2+0.01+0.03*capillary_num, 0, 0))
+        capillary[-1].translate((-0.47 / 2 + 0.01 + 0.03 * capillary_num, 0, 0))
 
-    # Generates the light position vector. It needs tilt angle therefore is defined locally as a closure. How elegant :)
+    # Apply tilt angle to the reactor (and its children)
+    reactor.rotate(np.radians(tilt_angle), (0, 1, 0))
+    reactor.translate((-np.sin(np.deg2rad(tilt_angle)) * 0.5 * 0.008, 0,
+                       -np.cos(np.deg2rad(tilt_angle)) * 0.5 * 0.008))
+
+    return Scene(world)
+
+
+def create_direct_scene(tilt_angle: float = 30, solar_elevation: float = 30, solar_azimuth: float = 180,
+                        solar_spectrum_function: Callable = lambda: 555) -> Scene:
+    """ Create a scene with a fixed light position and direction, to match direct irradiation """
+
     def light_position():
         position = rectangular_mask(0.47/2, 0.47/2)
         matrix = np.linalg.inv(rotation_matrix(np.radians(-tilt_angle), (0, 1, 0)))
@@ -131,13 +142,21 @@ def create_standard_scene(tilt_angle: float = 30, solar_elevation: float = 30, s
             direction=reversed_solar_light_vector,
             position=light_position
         ),
-        parent=world
+        parent=None
     )
     solar_light.translate(solar_light_vector)
 
-    # Apply tilt angle to the reactor (and its children)
-    reactor.rotate(np.radians(tilt_angle), (0, 1, 0))
-    reactor.translate((-np.sin(np.deg2rad(tilt_angle)) * 0.5 * 0.008, 0,
-                       -np.cos(np.deg2rad(tilt_angle)) * 0.5 * 0.008))
+    return _create_scene_common(tilt_angle=tilt_angle, light_source=solar_light)
 
-    return Scene(world)
+def create_diffuse_scene(tilt_angle: float = 30, solar_spectrum_function: Callable = lambda: 555):
+    """ Create a scene with a random light position, to match diffuse irradiation """
+    solar_light = Node(
+        name="Solar Light",
+        light=Light(
+            wavelength=solar_spectrum_function,
+            direction=lambda: (1, 0, 0),
+            position=lambda: (1, 0, 0)
+        ),
+        parent=None
+    )
+    return _create_scene_common(tilt_angle=tilt_angle, light_source=solar_light)
