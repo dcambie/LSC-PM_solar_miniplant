@@ -48,7 +48,7 @@ class LightPosition:
         return tuple(new_pt)
 
 
-def _create_scene_common(tilt_angle: float = 30, light_source) -> Scene:
+def _create_scene_common(tilt_angle, light_source) -> Scene:
     logger = logging.getLogger("pvtrace").getChild("miniplant")
     logger.debug(f"Creating simulation scene w/ angle={tilt_angle}deg...")
 
@@ -130,6 +130,18 @@ def _create_scene_common(tilt_angle: float = 30, light_source) -> Scene:
         # Adjust capillary position
         capillary[-1].translate((-0.47 / 2 + 0.01 + 0.03 * capillary_num, 0, 0))
 
+    # Apply tilt angle to the reactor (and its children)
+    reactor.rotate(np.radians(tilt_angle), (0, 1, 0))
+    reactor.translate((-np.sin(np.deg2rad(tilt_angle)) * 0.5 * 0.008, 0,
+                       -np.cos(np.deg2rad(tilt_angle)) * 0.5 * 0.008))
+
+    return Scene(world)
+
+
+def create_direct_scene(tilt_angle: float = 30, solar_elevation: float = 30, solar_azimuth: float = 180,
+                        solar_spectrum_function: Callable = lambda: 555) -> Scene:
+    """ Create a scene with a fixed light position and direction, to match direct irradiation """
+
     light_position = LightPosition(tilt_angle=tilt_angle)
 
     # Define rays direction based on solar position
@@ -150,6 +162,7 @@ def _create_scene_common(tilt_angle: float = 30, light_source) -> Scene:
     solar_light.translate(solar_light_vector)
 
     return _create_scene_common(tilt_angle=tilt_angle, light_source=solar_light)
+
 
 def create_diffuse_scene(tilt_angle: float = 30, solar_spectrum_function: Callable = lambda: 555):
     """ Create a scene with a random light position, to match diffuse irradiation """
