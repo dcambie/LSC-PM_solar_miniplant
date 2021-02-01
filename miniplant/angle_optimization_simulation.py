@@ -7,6 +7,13 @@ import time
 import datetime
 from pathlib import Path
 
+import os
+# Forcing numpy to single thread results in better multiprocessing performance.
+# See pvtrace issue #48
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+os.environ["OMP_NUM_THREADS"] = "1"
+
 import numpy as np
 import pandas as pd
 
@@ -21,7 +28,16 @@ RAYS_PER_SIMULATIONS = 100
 logger = logging.getLogger("pvtrace").getChild("miniplant")
 
 
-def evaluate_tilt_angle(tilt_angle: int, location: Location, time_range: pd.DatetimeIndex, workers: int = None,
+class PhotonFactory:
+    """ Create a callable sampling the current solar spectrum """
+    def __init__(self, spectrum):
+        self.spectrum = spectrum
+
+    def __call__(self, *args, **kwargs):
+        return self.spectrum.sample(np.random.uniform())
+
+
+def evaluate_tilt_angle(tilt_angle: int, location: Location, workers: int = None,
                         simulate_diffuse = False):
     logger.info(f"Starting simulation w/ tilt angle {tilt_angle}")
 
@@ -44,8 +60,7 @@ def evaluate_tilt_angle(tilt_angle: int, location: Location, time_range: pd.Date
             return df
 
         # Create a function sampling the current solar spectrum
-        def direct_photon_factory() -> float:
-            return df['direct_spectrum'].sample(np.random.uniform())
+        direct_photon_factory = PhotonFactory(df['direct_spectrum'])
 
         # Get the fraction of direct photon reacted
         df['simulation_direct'] = run_direct_simulation(tilt_angle=tilt_angle, solar_azimuth=df['azimuth'],
