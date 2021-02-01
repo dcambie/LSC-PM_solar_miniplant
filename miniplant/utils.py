@@ -41,3 +41,10 @@ if __name__ == '__main__':
     print(photon._y)  # [0.00451405 0.00917856]
 
 
+class PhotonFactory:
+    """ Create a callable sampling the current solar spectrum """
+    def __init__(self, spectrum):
+        self.spectrum = spectrum
+
+    def __call__(self, *args, **kwargs):
+        return self.spectrum.sample(np.random.uniform())

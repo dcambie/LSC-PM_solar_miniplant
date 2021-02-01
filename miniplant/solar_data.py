@@ -14,7 +14,7 @@ from pvlib.location import Location
 from pvlib import spectrum, irradiance, atmosphere
 
 # assumptions
-from miniplant.irradiance_to_photon_flux import spectral_distribution_to_photon_distribution
+from miniplant.utils import spectral_distribution_to_photon_distribution
 
 water_vapor_content = 0.5  # cm
 tau500 = 0.1
@@ -22,16 +22,19 @@ ozone = 0.31  # atm-cm
 albedo = 0.2
 
 
-def solar_data_for_place_and_time(site: Location, datetime_points: pd.DatetimeIndex,
-                                  tilt_angle: int) -> pd.DataFrame:
+def solar_data_for_place_and_time(site: Location, tilt_angle: int, time_resolution: int = 1800) -> pd.DataFrame:
     """
     Given a Location object and a series of datetime points calculates relevant solar position and spectral distribution
 
     :param site: pvlib.location.Location object
-    :param datetime_points: as pandas data_range
     :param tilt_angle: reactor tilt angle, used to calculate angle of incidence
+    :param time_resolution: time resolution for time points, in seconds. Default to 30 min.
     :return: a pd.DataFrame with all the relevant results
     """
+    # Create time points to simulate over a one-year period with the given time resolution
+    datetime_points = pd.date_range(start=datetime.datetime(2020, 1, 1), end=datetime.datetime(2021, 1, 1),
+                                    freq=f"{time_resolution}S", tz=site.tz)
+
     # Pressure based on site altitude
     pressure = atmosphere.alt2pres(site.altitude)
 
@@ -76,8 +79,8 @@ def solar_data_for_place_and_time(site: Location, datetime_points: pd.DatetimeIn
             # When the sun is behind the array the sign of AoI dot product becomes negative. We skip those time point ;)
             return df
 
-        df['direct_spectrum'] = spectral_distribution_to_photon_distribution(direct)
-        df['diffuse_spectrum'] = spectral_distribution_to_photon_distribution(diffuse)
+        df['direct_spectrum'] = spectral_distribution_to_photon_distribution(direct, integration_time=time_resolution)
+        df['diffuse_spectrum'] = spectral_distribution_to_photon_distribution(diffuse, integration_time=time_resolution)
 
         # Calculate irradiance from spectral results in the spectral range of interest for simulations (see note above)
         df["direct_irradiance"] = integrate.trapz(df['direct_spectrum']._y, df['direct_spectrum']._x)
