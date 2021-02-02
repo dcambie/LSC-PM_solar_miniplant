@@ -15,10 +15,12 @@ for location in LOCATIONS:
     plt.rcParams["axes.prop_cycle"] = plt.cycler("color", plt.cm.viridis(np.linspace(1, 0, 19)))
 
     # Set figure settings
-    fig, ax = plt.subplots(figsize=plt.figaspect(1/GOLDEN_RATIO))
-    ax.set(title=f"Tilt angle impact on LSC-PM performance ({location.name})",
-           xlabel="Month",
-           ylabel="Reaction absorbed photons (a.u.)")
+    fig, ax = plt.subplots(figsize=plt.figaspect(1 / GOLDEN_RATIO))
+    ax.set(
+        title=f"Tilt angle impact on LSC-PM performance ({location.name})",
+        xlabel="Month",
+        ylabel="Reaction absorbed photons (a.u.)",
+    )
     df = None
 
     # Iterate files for each angle
@@ -30,9 +32,14 @@ for location in LOCATIONS:
             continue
 
         # Load simulation results
-        df = pd.read_csv(FILE, parse_dates=[0], index_col=0, date_parser=lambda col: pd.to_datetime(col, utc=True))
+        df = pd.read_csv(
+            FILE,
+            parse_dates=[0],
+            index_col=0,
+            date_parser=lambda col: pd.to_datetime(col, utc=True),
+        )
         # Resample daily
-        daily = df.resample('D').sum()
+        daily = df.resample("D").sum()
 
         # Plot efficiency
         plt.plot(daily.index, daily["dni_reacted"], label=f"{angle} deg")

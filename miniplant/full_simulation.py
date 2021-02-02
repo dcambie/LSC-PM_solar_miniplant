@@ -7,6 +7,7 @@ import time
 from pathlib import Path
 import logging
 import os
+
 # Forcing numpy to single thread results in better multiprocessing performance.
 # See pvtrace issue #48
 from miniplant.scene_creator import REACTOR_AREA_IN_M2
@@ -29,6 +30,7 @@ logger = logging.getLogger("pvtrace").getChild("miniplant")
 
 class PhotonFactory:
     """ Create a callable sampling the current solar spectrum """
+
     def __init__(self, spectrum):
         self.spectrum = spectrum
 
@@ -36,11 +38,18 @@ class PhotonFactory:
         return self.spectrum.sample(np.random.uniform())
 
 
-def yearlong_simulation(tilt_angle: int, location: Location, workers: int = None, time_resolution: int = 1800,
-                        num_photons_per_simulation: int = 120):
+def yearlong_simulation(
+    tilt_angle: int,
+    location: Location,
+    workers: int = None,
+    time_resolution: int = 1800,
+    num_photons_per_simulation: int = 120,
+):
     logger.info(f"Starting simulation w/ tilt angle {tilt_angle}")
 
-    solar_data = solar_data_for_place_and_time(location, tilt_angle, time_resolution=time_resolution)
+    solar_data = solar_data_for_place_and_time(
+        location, tilt_angle, time_resolution=time_resolution
+    )
 
     def calculate_productivity_for_datapoint(df):
         """
@@ -51,21 +60,32 @@ def yearlong_simulation(tilt_angle: int, location: Location, workers: int = None
         logger.info(f"Current date/time {df.name}")
 
         # Create a function sampling the current solar spectrum
-        direct_photon_factory = PhotonFactory(df['direct_spectrum'])
-        diffuse_photon_factory = PhotonFactory(df['diffuse_spectrum'])
+        direct_photon_factory = PhotonFactory(df["direct_spectrum"])
+        diffuse_photon_factory = PhotonFactory(df["diffuse_spectrum"])
 
         # Get the fraction of direct photon reacted
-        df['simulation_direct'] = run_direct_simulation(tilt_angle=tilt_angle, solar_azimuth=df['azimuth'],
-                                                        solar_elevation=df['apparent_elevation'],
-                                                        solar_spectrum_function=direct_photon_factory,
-                                                        num_photons=num_photons_per_simulation, workers=workers)
-        df['direct_reacted'] = df['simulation_direct'] * df['direct_irradiance'] * REACTOR_AREA_IN_M2
+        df["simulation_direct"] = run_direct_simulation(
+            tilt_angle=tilt_angle,
+            solar_azimuth=df["azimuth"],
+            solar_elevation=df["apparent_elevation"],
+            solar_spectrum_function=direct_photon_factory,
+            num_photons=num_photons_per_simulation,
+            workers=workers,
+        )
+        df["direct_reacted"] = (
+            df["simulation_direct"] * df["direct_irradiance"] * REACTOR_AREA_IN_M2
+        )
 
         # Get the fraction of diffuse photon reacted
-        df['simulation_diffuse'] = run_diffuse_simulation(tilt_angle=tilt_angle,
-                                                          solar_spectrum_function=diffuse_photon_factory,
-                                                          num_photons=num_photons_per_simulation, workers=workers)
-        df['diffuse_reacted'] = df['simulation_diffuse'] * df['diffuse_irradiance'] * REACTOR_AREA_IN_M2
+        df["simulation_diffuse"] = run_diffuse_simulation(
+            tilt_angle=tilt_angle,
+            solar_spectrum_function=diffuse_photon_factory,
+            num_photons=num_photons_per_simulation,
+            workers=workers,
+        )
+        df["diffuse_reacted"] = (
+            df["simulation_diffuse"] * df["diffuse_irradiance"] * REACTOR_AREA_IN_M2
+        )
 
         return df
 
@@ -74,19 +94,31 @@ def yearlong_simulation(tilt_angle: int, location: Location, workers: int = None
     print(f"Simulation ended in {(time.time() - start_time) / 60:.1f} minutes!")
 
     # Results will be saved in the following CSV file
-    target_file = Path(f"test_simulation_results/{location.name}/{location.name}_{tilt_angle}deg_results.csv")
+    target_file = Path(
+        f"test_simulation_results/{location.name}/{location.name}_{tilt_angle}deg_results.csv"
+    )
     target_file.parent.mkdir(parents=True, exist_ok=True)  # Ensure folder existence
-    results.to_csv(target_file, columns=("apparent_elevation", "azimuth", "simulation_direct", "direct_reacted",
-                                         "simulation_diffuse", "diffuse_reacted"))
+    results.to_csv(
+        target_file,
+        columns=(
+            "apparent_elevation",
+            "azimuth",
+            "simulation_direct",
+            "direct_reacted",
+            "simulation_diffuse",
+            "diffuse_reacted",
+        ),
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Set loggers
-    logging.getLogger('trimesh').disabled = True
-    logging.getLogger('shapely.geos').disabled = True
+    logging.getLogger("trimesh").disabled = True
+    logging.getLogger("shapely.geos").disabled = True
     logging.getLogger("pvtrace").setLevel(logging.INFO)  # use logging.DEBUG for more printouts
 
     from miniplant.locations import EINDHOVEN
+
     site = EINDHOVEN
 
     yearlong_simulation(tilt_angle=45, location=EINDHOVEN, workers=12, time_resolution=1800)

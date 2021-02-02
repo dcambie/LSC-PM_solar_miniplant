@@ -13,18 +13,25 @@ for angle in angles:
         continue
 
     # Load data in Pandas dataframe
-    df = pd.read_csv(FILE, parse_dates=[0], index_col=0, date_parser=lambda col: pd.to_datetime(col, utc=True))
+    df = pd.read_csv(
+        FILE,
+        parse_dates=[0],
+        index_col=0,
+        date_parser=lambda col: pd.to_datetime(col, utc=True),
+    )
 
     # Correction function
     def correct_efficiency(df) -> float:
         # Field renames
-        df['direct_irradiation_simulation_result'] = df['efficiency']
-        del df['efficiency']
-        del df['efficiency_corrected']
+        df["direct_irradiation_simulation_result"] = df["efficiency"]
+        del df["efficiency"]
+        del df["efficiency_corrected"]
 
         # Get DNI from GHI and DHI [GHI = DHI + DNI * Cos(elevation)]
-        dni = (df['ghi'] - df['dhi']) / math.cos(math.radians(df['apparent_elevation']))
-        df['dni_reacted'] = df['direct_irradiation_simulation_result'] * dni * df['surface_fraction']
+        dni = (df["ghi"] - df["dhi"]) / math.cos(math.radians(df["apparent_elevation"]))
+        df["dni_reacted"] = (
+            df["direct_irradiation_simulation_result"] * dni * df["surface_fraction"]
+        )
 
         return df
 

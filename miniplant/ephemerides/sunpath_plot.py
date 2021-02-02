@@ -43,48 +43,58 @@ import matplotlib.ticker as mtick
 from miniplant.locations import LOCATIONS
 
 for location in LOCATIONS:
-    times = pd.date_range('2019-01-01 00:00:00', '2020-01-01', closed='left', freq='H', tz=location.pytz)
-    solpos = solarposition.get_solarposition(time=times, latitude=location.latitude, longitude=location.longitude)
+    times = pd.date_range(
+        "2019-01-01 00:00:00", "2020-01-01", closed="left", freq="H", tz=location.pytz
+    )
+    solpos = solarposition.get_solarposition(
+        time=times, latitude=location.latitude, longitude=location.longitude
+    )
 
     # remove nighttime
-    solpos = solpos.loc[solpos['apparent_elevation'] > 0, :]
+    solpos = solpos.loc[solpos["apparent_elevation"] > 0, :]
 
     fig, ax = plt.subplots()
     ax.set(xlim=[0, 360])
     ax.xaxis.set_major_locator(mtick.MaxNLocator(6))
 
-    points = ax.scatter(solpos.azimuth, solpos.apparent_elevation, s=2, c=solpos.index.dayofyear, label=None)
+    points = ax.scatter(
+        solpos.azimuth,
+        solpos.apparent_elevation,
+        s=2,
+        c=solpos.index.dayofyear,
+        label=None,
+    )
 
     # Color bar
     cbar = fig.colorbar(points, orientation="vertical")
     cbar.ax.get_yaxis().labelpad = 15
 
-    cbar.set_label('Day of the year', rotation=270)
+    cbar.set_label("Day of the year", rotation=270)
 
     for hour in np.unique(solpos.index.hour):
         # choose label position by the largest elevation for each hour
         subset = solpos.loc[solpos.index.hour == hour, :]
         height = subset.apparent_elevation
         pos = solpos.loc[height.idxmax(), :]
-        ax.text(pos['azimuth'], pos['apparent_elevation'], str(hour))
+        ax.text(pos["azimuth"], pos["apparent_elevation"], str(hour))
 
-    for date in pd.to_datetime(['2019-03-21', '2019-06-21', '2019-12-21']):
-        times = pd.date_range(date, date+pd.Timedelta('24h'), freq='5min', tz=location.pytz)
+    for date in pd.to_datetime(["2019-03-21", "2019-06-21", "2019-12-21"]):
+        times = pd.date_range(date, date + pd.Timedelta("24h"), freq="5min", tz=location.pytz)
         solpos = solarposition.get_solarposition(times, location.latitude, location.longitude)
         # Ignore points where apparent elevation is below horizon ;)
-        solpos = solpos.loc[solpos['apparent_elevation'] > 0, :]
+        solpos = solpos.loc[solpos["apparent_elevation"] > 0, :]
 
         # Export as csv for both use and validation
         export_file_name = f"{location.name}_{date.strftime('%Y-%m-%d')}_solar_position.csv"
         solpos.to_csv(export_file_name, columns=["azimuth", "apparent_elevation"])
 
-        label = date.strftime('%d-%b')
+        label = date.strftime("%d-%b")
         ax.plot(solpos.azimuth, solpos.apparent_elevation, label=label)
 
-    ax.figure.legend(loc='lower right')
-    plt.title(f'Sunpath {location.name} (calculated with pvlib)')
-    ax.set_xlabel('Solar Azimuth (degrees)')
-    ax.set_ylabel('Solar Elevation (degrees)')
+    ax.figure.legend(loc="lower right")
+    plt.title(f"Sunpath {location.name} (calculated with pvlib)")
+    ax.set_xlabel("Solar Azimuth (degrees)")
+    ax.set_ylabel("Solar Elevation (degrees)")
 
     # Export as figure
     plt.savefig(f"{location.name}_solar_positions.png", dpi=300)

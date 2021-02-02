@@ -28,12 +28,13 @@ def spectral_distribution_to_photon_distribution(distribution: Distribution, int
     photon_flux = []
 
     for wavelength, intensity in zip(distribution._x, distribution._y):
-        photon_flux.append(irradiance_to_photon_flux(intensity, wavelength)* integration_time)
+        photon_flux.append(irradiance_to_photon_flux(intensity, wavelength) * integration_time)
     return Distribution(distribution._x, np.array(photon_flux))
 
 
 class PhotonFactory:
     """ Create a callable sampling the current solar spectrum """
+
     def __init__(self, spectrum):
         self.spectrum = spectrum
 
@@ -105,8 +106,12 @@ def create_diffuse_photon(tilt_angle: int = 30) -> np.ndarray:
         random_azimuth = np.random.rand() * 360
         random_zenith = np.random.rand() * 90
         # Test its validity
-        aoi_projection = irradiance.aoi_projection(surface_tilt=tilt_angle, surface_azimuth=0,
-                                                   solar_zenith=random_zenith, solar_azimuth=random_azimuth)
+        aoi_projection = irradiance.aoi_projection(
+            surface_tilt=tilt_angle,
+            surface_azimuth=0,
+            solar_zenith=random_zenith,
+            solar_azimuth=random_azimuth,
+        )
     # Return the corresponding vector (note that the direction is from origin outwards)
     return spherical_to_cart(theta=np.deg2rad(random_zenith), phi=np.deg2rad(random_azimuth))
 
@@ -125,5 +130,7 @@ class IsotropicPhotonGenerator:
         position = self.base_position_generator()
         direction = create_diffuse_photon(self.tilt_angle)
         position += direction  # Translate position to ensure origin is not on reactor surface (+ visualization reasons)
-        reversed_direction = tuple(-value for value in direction)  # Reversed to point towards the reactor!
+        reversed_direction = tuple(
+            -value for value in direction
+        )  # Reversed to point towards the reactor!
         return position, reversed_direction
