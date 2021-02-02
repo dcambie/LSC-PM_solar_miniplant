@@ -4,19 +4,19 @@ Output in Einstein absorbed.
 """
 
 import time
-import datetime
 from pathlib import Path
 import logging
 import os
 # Forcing numpy to single thread results in better multiprocessing performance.
 # See pvtrace issue #48
+from miniplant.scene_creator import REACTOR_AREA_IN_M2
+
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_MAX_THREADS"] = "1"
 os.environ["OMP_NUM_THREADS"] = "1"
 
 import numpy as np
-import pandas as pd
 
 from pvlib.location import Location
 from pvtrace import *
@@ -34,12 +34,6 @@ class PhotonFactory:
 
     def __call__(self, *args, **kwargs):
         return self.spectrum.sample(np.random.uniform())
-
-
-def correct_productivity_per_reactor_area(df):
-    """ All the intensities are normalized over 1 m^2 irradiated.
-     Here the correction for the actual reactor irradiated area is performed! """
-    raise NotImplementedError
 
 
 def yearlong_simulation(tilt_angle: int, location: Location, workers: int = None, time_resolution: int = 1800,
@@ -65,13 +59,13 @@ def yearlong_simulation(tilt_angle: int, location: Location, workers: int = None
                                                         solar_elevation=df['apparent_elevation'],
                                                         solar_spectrum_function=direct_photon_factory,
                                                         num_photons=num_photons_per_simulation, workers=workers)
-        df['direct_reacted'] = df['simulation_direct'] * df['direct_irradiance']
+        df['direct_reacted'] = df['simulation_direct'] * df['direct_irradiance'] * REACTOR_AREA_IN_M2
 
         # Get the fraction of diffuse photon reacted
         df['simulation_diffuse'] = run_diffuse_simulation(tilt_angle=tilt_angle,
-                                                         solar_spectrum_function=diffuse_photon_factory,
-                                                         num_photons=num_photons_per_simulation, workers=workers)
-        df['diffuse_reacted'] = df['simulation_diffuse'] * df['diffuse_irradiance']
+                                                          solar_spectrum_function=diffuse_photon_factory,
+                                                          num_photons=num_photons_per_simulation, workers=workers)
+        df['diffuse_reacted'] = df['simulation_diffuse'] * df['diffuse_irradiance'] * REACTOR_AREA_IN_M2
 
         return df
 
@@ -80,10 +74,9 @@ def yearlong_simulation(tilt_angle: int, location: Location, workers: int = None
     final_results = results.apply(correct_productivity_per_reactor_area, axis=1)
     print(f"Simulation ended in {(time.time() - start_time) / 60:.1f} minutes!")
 
+    # Results will be saved in the following CSV file
     target_file = Path(f"test_simulation_results/{location.name}/{location.name}_{tilt_angle}deg_results.csv")
-
-    target_file.parent.mkdir(parents=True, exist_ok=True)
-    # Saved CSV now include direct_irradiation_simulation_result and dni_reacted! :)
+    target_file.parent.mkdir(parents=True, exist_ok=True)  # Ensure folder existence
     final_results.to_csv(target_file, columns=("apparent_elevation", "azimuth",
                                                "simulation_direct", "direct_reacted",
                                                "simulation_diffuse", "diffuse_reacted"))
@@ -98,4 +91,4 @@ if __name__ == '__main__':
     from miniplant.locations import EINDHOVEN
     site = EINDHOVEN
 
-    yearlong_simulation(tilt_angle=40, location=EINDHOVEN, workers=12, time_resolution=7200)
+    yearlong_simulation(tilt_angle=40, location=EINDHOVEN, workers=12, time_resolution=15778463 )
