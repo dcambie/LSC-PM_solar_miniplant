@@ -54,9 +54,6 @@ def yearlong_simulation(tilt_angle: int, location: Location, workers: int = None
         simulation is not deemed necessary (solar position below horizon or invalid surface fraction)
         """
         logger.info(f"Current date/time {df.name}")
-        # Ensure column existence
-        df['simulation_direct'] = 0
-        df['direct_reacted'] = 0
 
         # Create a function sampling the current solar spectrum
         direct_photon_factory = PhotonFactory(df['direct_spectrum'])
