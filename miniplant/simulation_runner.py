@@ -16,6 +16,9 @@ logger = logging.getLogger("pvtrace").getChild("miniplant")
 def _common_simulation_runner(scene: Scene, num_photons: int = 100, render: bool = False, workers: int = None):
     logger.debug(f"Starting ray-tracing with {num_photons} photons (Render is {render})")
 
+    if render and workers > 1:
+        raise RuntimeError("Sorry, cannot use renderer if more than 1 worker is used!")
+
     # SINGLE-THREADED
     if workers == 1:
         if render:
@@ -58,6 +61,6 @@ def run_diffuse_simulation(tilt_angle: int = 0, solar_spectrum_function: Callabl
 
 
 if __name__ == '__main__':
-    run_diffuse_simulation(tilt_angle=60, render=True, workers=4, num_photons=400)
+    run_diffuse_simulation(tilt_angle=60, render=True, workers=1, num_photons=400)
     # run_direct_simulation(tilt_angle=10, render=True, workers=1)
     input()
