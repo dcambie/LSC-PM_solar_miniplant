@@ -71,15 +71,13 @@ def yearlong_simulation(tilt_angle: int, location: Location, workers: int = None
 
     start_time = time.time()
     results = solar_data.apply(calculate_productivity_for_datapoint, axis=1)
-    final_results = results.apply(correct_productivity_per_reactor_area, axis=1)
     print(f"Simulation ended in {(time.time() - start_time) / 60:.1f} minutes!")
 
     # Results will be saved in the following CSV file
     target_file = Path(f"test_simulation_results/{location.name}/{location.name}_{tilt_angle}deg_results.csv")
     target_file.parent.mkdir(parents=True, exist_ok=True)  # Ensure folder existence
-    final_results.to_csv(target_file, columns=("apparent_elevation", "azimuth",
-                                               "simulation_direct", "direct_reacted",
-                                               "simulation_diffuse", "diffuse_reacted"))
+    results.to_csv(target_file, columns=("apparent_elevation", "azimuth", "simulation_direct", "direct_reacted",
+                                         "simulation_diffuse", "diffuse_reacted"))
 
 
 if __name__ == '__main__':
