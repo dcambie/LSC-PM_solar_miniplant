@@ -13,6 +13,6 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/dcambie/LSC-PM_solar_miniplant",
     packages=setuptools.find_packages(),
-    install_requires=['pvtrace>=2.0.0', 'pvlib>=0.7.2', 'solcore>=5.7.1', 'tables'],
+    install_requires=['pvtrace>=2.0.0', 'pvlib>=0.7.2', 'tables'],
     python_requires='>=3.6',
 )
