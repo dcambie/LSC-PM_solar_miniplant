@@ -58,6 +58,6 @@ def run_diffuse_simulation(tilt_angle: int = 0, solar_spectrum_function: Callabl
 
 
 if __name__ == '__main__':
-    run_diffuse_simulation(tilt_angle=60, render=True, workers=1)
+    run_diffuse_simulation(tilt_angle=60, render=True, workers=4, num_photons=400)
     # run_direct_simulation(tilt_angle=10, render=True, workers=1)
     input()

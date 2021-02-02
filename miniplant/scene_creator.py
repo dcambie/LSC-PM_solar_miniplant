@@ -6,13 +6,15 @@ import numpy as np
 
 from pvtrace import Node, Box, Sphere, Material, Luminophore, Absorber, Cylinder, Reactor, Light, Scene
 from pvtrace import isotropic, rectangular_mask
-from pvtrace.geometry.transformations import rotation_matrix, translation_matrix
+from pvtrace.geometry.transformations import rotation_matrix
 from pvtrace.material.utils import spherical_to_cart
 
 from pvlib import irradiance
 
 
 # Experimental data
+from miniplant.utils import MyLight
+
 MB_ABS_DATAFILE = "reactor_data/MB_1M_1m_ACN.txt"
 LR305_ABS_DATAFILE = "reactor_data/Evonik_lr305_normalized_to_1m.txt"
 LR305_EMS_DATAFILE = "reactor_data/Evonik_lr305_normalized_to_1m_ems.txt"
@@ -49,45 +51,39 @@ class LightPosition:
         return tuple(new_pt)
 
 
-class RandomPositionandDirection:
-    tilt_angle = 0
-    last_direction = None
-
-    def __init__(self, tilt_angle):
-        RandomPositionandDirection.tilt_angle = tilt_angle
-        RandomPositionandDirection.base_position = LightPosition(tilt_angle)
-
-    @classmethod
-    def position(cls):
-        """ For diffuse simulation position and direction are related and need to be set together """
-        position = RandomPositionandDirection.base_position()
-        direction = create_diffuse_photon(RandomPositionandDirection.tilt_angle)
-        position += direction  # Translate position to ensure origin is not on reactor surface (+ visualization reasons)
-        RandomPositionandDirection.last_direction = direction
-        return position
-
-    @classmethod
-    def direction(cls):
-        """ Just return the cached value for direction.
-         NOTE: THIS IS UGLY AND RELIES ON THE FACT THAT PVTRACE FIRST ASK FOR POSITION AND THEN FOR DIRECTION! """
-        return tuple(-value for value in RandomPositionandDirection.last_direction)
-
-
-def create_diffuse_photon(tilt_angle: int = 30) -> Tuple[Callable, Callable]:
+def create_diffuse_photon(tilt_angle: int = 30) -> np.ndarray:
     # Keep on generating random photons until they are on the right side of the reactor
     # This is correct because poa_diffuse already takes into account the tilt angle! ;)
-    is_angle_valid = False
-    while is_angle_valid is False:
+
+    # Accept angle if the projection is positive, i.e. reactor front face
+    aoi_projection = -1
+    while aoi_projection < 0:
         # Random point in the half-sphere
         random_azimuth = np.random.rand() * 360
         random_zenith = np.random.rand() * 90
 
-        aoi_projection = irradiance.aoi_projection(surface_tilt=tilt_angle, surface_azimuth=180,
+        aoi_projection = irradiance.aoi_projection(surface_tilt=tilt_angle, surface_azimuth=0,
                                                    solar_zenith=random_zenith, solar_azimuth=random_azimuth)
-        # Accept angle if the projection is positive, i.e. reactor front face
-        is_angle_valid = aoi_projection > 0
 
     return spherical_to_cart(theta=np.deg2rad(random_zenith), phi=np.deg2rad(random_azimuth))
+
+
+class IsotropicPhotonGenerator:
+    """
+    Creates random photon position together with its direction so that it ends up in the reactor front face.
+    This use the custom MyLight as with the standard pvtrace.Light position and direction cannot be set together.
+    """
+
+    def __init__(self, tilt_angle):
+        self.tilt_angle = tilt_angle
+        self.base_position_generator = LightPosition(tilt_angle)
+
+    def __call__(self, *args, **kwargs):
+        position = self.base_position_generator()
+        direction = create_diffuse_photon(self.tilt_angle)
+        position += direction  # Translate position to ensure origin is not on reactor surface (+ visualization reasons)
+        reversed_direction = tuple(-value for value in direction)  # Reversed to point towards the reactor!
+        return position, reversed_direction
 
 
 def _create_scene_common(tilt_angle, light_source) -> Scene:
@@ -207,14 +203,11 @@ def create_direct_scene(tilt_angle: float = 30, solar_elevation: float = 30, sol
 def create_diffuse_scene(tilt_angle: float = 30, solar_spectrum_function: Callable = lambda: 555):
     """ Create a scene with a random light position, to match diffuse irradiation """
 
-    uffa = RandomPositionandDirection(tilt_angle)
-
     solar_light = Node(
         name="Solar Light",
-        light=Light(
+        light=MyLight(
             wavelength=solar_spectrum_function,
-            direction=uffa.direction,
-            position=uffa.position
+            position_and_direction=IsotropicPhotonGenerator(tilt_angle)
         ),
         parent=None
     )

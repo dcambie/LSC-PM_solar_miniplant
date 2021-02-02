@@ -1,9 +1,11 @@
 """
 Module with a function to convert spectra from W * m^-2 * nm^-1 to umol * m^-2 * s^-1
 """
+from typing import Iterator
+
 import numpy as np
 from scipy.constants import Planck, speed_of_light, Avogadro
-from pvtrace import Distribution
+from pvtrace import Distribution, Ray, Light
 
 
 def photon_energy(wavelength):
@@ -48,3 +50,33 @@ class PhotonFactory:
 
     def __call__(self, *args, **kwargs):
         return self.spectrum.sample(np.random.uniform())
+
+
+class MyLight(Light):
+    """ Modified pvtracel.Light object """
+
+    def __init__(self, wavelength=None, position_and_direction=None, name="Light"):
+        self.wavelength = wavelength
+        self.position_direction = position_and_direction
+        self.name = name
+
+    def emit(self, num_rays=None) -> Iterator[Ray]:
+        if num_rays is None or num_rays == 0:
+            return
+        count = 0
+        while True:
+            count += 1
+            if num_rays is not None and count > num_rays:
+                break
+
+            try:
+                position, direction = self.position_direction()
+                ray = Ray(
+                    wavelength=self.wavelength(),
+                    position=position,
+                    direction=direction,
+                    source=self.name,
+                )
+            except Exception:
+                raise
+            yield ray
