@@ -70,11 +70,11 @@ def solar_data_for_place_and_time(site: Location, tilt_angle: int, time_resoluti
         NOTE: we are neglecting the ground diffuse component here! (I_tilt = I_beam + I_sky + I_ground)
         """
 
-        # Add solar spectra for diffuse and direct to dataframe (trimmed to UV-VIS) [in particular 10-37 is 360--690 nm]
+        # Add solar spectra for diffuse and direct to dataframe (trimmed to UV-VIS) [in particular 11-38 is 360--690 nm]
         try:
-            direct = Distribution(solar_spectrum['wavelength'][10:37], np.squeeze(solar_spectrum['poa_direct'][10:37]))
-            diffuse = Distribution(solar_spectrum['wavelength'][10:37],
-                                   np.squeeze(solar_spectrum['poa_sky_diffuse'][10:37]))
+            direct = Distribution(solar_spectrum['wavelength'][11:38], np.squeeze(solar_spectrum['poa_direct'][11:38]))
+            diffuse = Distribution(solar_spectrum['wavelength'][11:38],
+                                   np.squeeze(solar_spectrum['poa_sky_diffuse'][11:38]))
         except ValueError:
             # When the sun is behind the array the sign of AoI dot product becomes negative. We skip those time point ;)
             return df
@@ -112,8 +112,6 @@ def solar_data_for_place_and_time(site: Location, tilt_angle: int, time_resoluti
 
 if __name__ == '__main__':
     from miniplant.locations import NORTH_CAPE
-    # Time points to be calculated
-    year2020 = pd.date_range(start=datetime.datetime(2020, 1, 1), end=datetime.datetime(2021, 1, 1), freq='0.5H')
 
     # perform calculations
-    test_df = solar_data_for_place_and_time(NORTH_CAPE, year2020, 30)
+    test_df = solar_data_for_place_and_time(NORTH_CAPE, 30, 36000)
