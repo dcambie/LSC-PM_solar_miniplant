@@ -23,7 +23,6 @@ from pvtrace import *
 from miniplant.simulation_runner import run_direct_simulation, run_diffuse_simulation
 from miniplant.solar_data import solar_data_for_place_and_time
 
-RAYS_PER_SIMULATIONS = 100
 logger = logging.getLogger("pvtrace").getChild("miniplant")
 
 
@@ -42,7 +41,8 @@ def correct_productivity_per_reactor_area(df):
     raise NotImplementedError
 
 
-def yearlong_simulation(tilt_angle: int, location: Location, workers: int = None, time_resolution: int = 1800):
+def yearlong_simulation(tilt_angle: int, location: Location, workers: int = None, time_resolution: int = 1800,
+                        num_photons_per_simulation: int = 120):
     logger.info(f"Starting simulation w/ tilt angle {tilt_angle}")
 
     solar_data = solar_data_for_place_and_time(location, tilt_angle, time_resolution=time_resolution)
@@ -63,13 +63,13 @@ def yearlong_simulation(tilt_angle: int, location: Location, workers: int = None
         df['simulation_direct'] = run_direct_simulation(tilt_angle=tilt_angle, solar_azimuth=df['azimuth'],
                                                         solar_elevation=df['apparent_elevation'],
                                                         solar_spectrum_function=direct_photon_factory,
-                                                        num_photons=RAYS_PER_SIMULATIONS, workers=workers)
+                                                        num_photons=num_photons_per_simulation, workers=workers)
         df['direct_reacted'] = df['simulation_direct'] * df['direct_irradiance']
 
         # Get the fraction of diffuse photon reacted
         df['simulation_diffuse'] = run_diffuse_simulation(tilt_angle=tilt_angle,
                                                          solar_spectrum_function=diffuse_photon_factory,
-                                                         num_photons=RAYS_PER_SIMULATIONS, workers=workers)
+                                                         num_photons=num_photons_per_simulation, workers=workers)
         df['diffuse_reacted'] = df['simulation_diffuse'] * df['diffuse_irradiance']
 
         return df
@@ -79,7 +79,7 @@ def yearlong_simulation(tilt_angle: int, location: Location, workers: int = None
     final_results = results.apply(correct_productivity_per_reactor_area, axis=1)
     print(f"Simulation ended in {(time.time() - start_time) / 60:.1f} minutes!")
 
-    target_file = Path(f"fake_simulation_results/{location.name}/{location.name}_{tilt_angle}deg_results.csv")
+    target_file = Path(f"test_simulation_results/{location.name}/{location.name}_{tilt_angle}deg_results.csv")
 
     target_file.parent.mkdir(parents=True, exist_ok=True)
     # Saved CSV now include direct_irradiation_simulation_result and dni_reacted! :)
