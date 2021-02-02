@@ -89,4 +89,4 @@ if __name__ == '__main__':
     from miniplant.locations import EINDHOVEN
     site = EINDHOVEN
 
-    yearlong_simulation(tilt_angle=40, location=EINDHOVEN, workers=12, time_resolution=1800)
+    yearlong_simulation(tilt_angle=45, location=EINDHOVEN, workers=12, time_resolution=1800)
