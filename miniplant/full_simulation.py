@@ -4,9 +4,10 @@ Output in Einstein absorbed.
 """
 
 import time
-from pathlib import Path
 import logging
 import os
+from pathlib import Path
+from tqdm import tqdm
 
 # Forcing numpy to single thread results in better multiprocessing performance.
 # See pvtrace issue #48
@@ -90,7 +91,8 @@ def yearlong_simulation(
         return df
 
     start_time = time.time()
-    results = solar_data.apply(calculate_productivity_for_datapoint, axis=1)
+    tqdm.pandas()  # Shows nice progress bar
+    results = solar_data.progress_apply(calculate_productivity_for_datapoint, axis=1)
     print(f"Simulation ended in {(time.time() - start_time) / 60:.1f} minutes!")
 
     # Results will be saved in the following CSV file
