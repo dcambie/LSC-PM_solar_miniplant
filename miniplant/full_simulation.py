@@ -11,18 +11,23 @@ from tqdm import tqdm
 
 # Forcing numpy to single thread results in better multiprocessing performance.
 # See pvtrace issue #48
-from miniplant.scene_creator import REACTOR_AREA_IN_M2
-
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_MAX_THREADS"] = "1"
 os.environ["OMP_NUM_THREADS"] = "1"
+
+# Set loggers (no output needed for progress bar to work!)
+logging.getLogger("trimesh").disabled = True
+logging.getLogger("shapely.geos").disabled = True
+logging.getLogger("pvtrace").setLevel(logging.WARNING)  # use logging.DEBUG for more printouts
+
 
 import numpy as np
 
 from pvlib.location import Location
 from pvtrace import *
 
+from miniplant.scene_creator import REACTOR_AREA_IN_M2
 from miniplant.simulation_runner import run_direct_simulation, run_diffuse_simulation
 from miniplant.solar_data import solar_data_for_place_and_time
 
@@ -117,10 +122,10 @@ if __name__ == "__main__":
     # Set loggers
     logging.getLogger("trimesh").disabled = True
     logging.getLogger("shapely.geos").disabled = True
-    logging.getLogger("pvtrace").setLevel(logging.INFO)  # use logging.DEBUG for more printouts
+    logging.getLogger("pvtrace").setLevel(logging.WARNING)  # use logging.DEBUG for more printouts
 
     from miniplant.locations import EINDHOVEN
 
     site = EINDHOVEN
 
-    yearlong_simulation(tilt_angle=45, location=EINDHOVEN, workers=12, time_resolution=1800)
+    yearlong_simulation(tilt_angle=45, location=EINDHOVEN, workers=12, time_resolution=60 * 30)
