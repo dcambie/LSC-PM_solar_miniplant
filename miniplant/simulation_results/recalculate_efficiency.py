@@ -3,10 +3,12 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
+from miniplant.locations import *
+city = PLATAFORMA_SOLAR_ALMERIA.name
 angles = np.arange(0, 91, 5)  # [0 - 90] every 5 degrees
 
 for angle in angles:
-    FILE = Path(f"Eindhoven_{angle}deg_results.csv")
+    FILE = Path(f"{city}/{city}_{angle}deg_results.csv")
 
     # Skip missing files
     if not FILE.exists():
@@ -22,13 +24,13 @@ for angle in angles:
 
     # Correction function
     def correct_efficiency(df) -> float:
-        # Field renames
-        df["direct_irradiation_simulation_result"] = df["efficiency"]
-        del df["efficiency"]
-        del df["efficiency_corrected"]
+        # # Field renames
+        # df["direct_irradiation_simulation_result"] = df["efficiency"]
+        # del df["efficiency"]
+        # del df["efficiency_corrected"]
 
         # Get DNI from GHI and DHI [GHI = DHI + DNI * Cos(elevation)]
-        dni = (df["ghi"] - df["dhi"]) / math.cos(math.radians(df["apparent_elevation"]))
+        dni = (df["ghi"] - df["dhi"]) / math.cos(math.radians(90-df["apparent_elevation"]))
         df["dni_reacted"] = (
             df["direct_irradiation_simulation_result"] * dni * df["surface_fraction"]
         )
@@ -39,6 +41,6 @@ for angle in angles:
     df = df.apply(correct_efficiency, axis=1)
 
     # Save as new file
-    FILE2 = Path(f"Eindhoven_{angle}deg_results.csv")
+    FILE2 = Path(f"{city}/{city}_{angle}deg_results.csv")
     df.to_csv(FILE2)
     print(f"Angle {angle} corrected!")

@@ -78,7 +78,7 @@ def evaluate_tilt_angle(
     print(f"Simulation ended in {(time.time() - start_time) / 60:.1f} minutes!")
 
     target_file = Path(
-        f"fake_simulation_results/{location.name}/{location.name}_{tilt_angle}deg_results.csv"
+        f"simulation_results/{location.name}/{location.name}_{np.abs(tilt_angle)}deg_results.csv"
     )
 
     target_file.parent.mkdir(parents=True, exist_ok=True)
