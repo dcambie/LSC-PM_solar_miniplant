@@ -5,6 +5,7 @@ Performs a screening for the yearly performance of a LSC-PM with different tilt 
 import time
 import datetime
 from pathlib import Path
+from tqdm import tqdm
 
 import os
 
@@ -74,7 +75,8 @@ def evaluate_tilt_angle(
         return df
 
     start_time = time.time()
-    results = solar_data.apply(calculate_productivity_for_datapoint, axis=1)
+    tqdm.pandas()  # Shows nice progress bar
+    results = solar_data.progress_apply(calculate_productivity_for_datapoint, axis=1)
     print(f"Simulation ended in {(time.time() - start_time) / 60:.1f} minutes!")
 
     target_file = Path(
@@ -85,7 +87,7 @@ def evaluate_tilt_angle(
     # Saved CSV now include direct_irradiation_simulation_result and dni_reacted! :)
     results.to_csv(
         target_file,
-        columns=("apparent_elevation", "azimuth", "simulation_direct", "dni_reacted"),
+        columns=("apparent_elevation", "azimuth", "simulation_direct", "direct_reacted"),
     )
 
 
@@ -95,13 +97,10 @@ if __name__ == "__main__":
     logging.getLogger("shapely.geos").disabled = True
     logging.getLogger("pvtrace").setLevel(logging.INFO)  # use logging.DEBUG for more printouts
 
-    from miniplant.locations import EINDHOVEN
+    from miniplant.locations import PLATAFORMA_SOLAR_ALMERIA
 
-    site = EINDHOVEN
+    site = PLATAFORMA_SOLAR_ALMERIA
 
-    # Run simulations with the following time range
-
-    tilt_range = [75, 80, 85, 90]
-
+    tilt_range = [25, 30, 35, 40, 45, 50, 55]
     for tilt in tilt_range:
-        evaluate_tilt_angle(tilt_angle=tilt, location=EINDHOVEN, workers=4, time_resolution=3600)
+        evaluate_tilt_angle(tilt_angle=tilt, location=PLATAFORMA_SOLAR_ALMERIA, workers=4)
