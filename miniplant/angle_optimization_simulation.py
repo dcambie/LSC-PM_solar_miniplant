@@ -3,6 +3,7 @@ Performs a screening for the yearly performance of a LSC-PM with different tilt 
 """
 
 import time
+import logging
 import datetime
 from pathlib import Path
 from tqdm import tqdm
@@ -15,6 +16,12 @@ os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_MAX_THREADS"] = "1"
 os.environ["OMP_NUM_THREADS"] = "1"
+
+
+# Set loggers (no output needed for progress bar to work!)
+logging.getLogger("trimesh").disabled = True
+logging.getLogger("shapely.geos").disabled = True
+logging.getLogger("pvtrace").setLevel(logging.WARNING)  # use logging.DEBUG for more printouts
 
 import numpy as np
 import pandas as pd
@@ -93,11 +100,6 @@ def evaluate_tilt_angle(
 
 
 if __name__ == "__main__":
-    # Set loggers
-    logging.getLogger("trimesh").disabled = True
-    logging.getLogger("shapely.geos").disabled = True
-    logging.getLogger("pvtrace").setLevel(logging.INFO)  # use logging.DEBUG for more printouts
-
     from miniplant.locations import PLATAFORMA_SOLAR_ALMERIA
 
     site = PLATAFORMA_SOLAR_ALMERIA
