@@ -104,6 +104,6 @@ if __name__ == "__main__":
 
     site = PLATAFORMA_SOLAR_ALMERIA
 
-    tilt_range = [25, 30, 35, 40, 45, 50, 55]
+    tilt_range = [20, 15]
     for tilt in tilt_range:
         evaluate_tilt_angle(tilt_angle=tilt, location=PLATAFORMA_SOLAR_ALMERIA, workers=4)
