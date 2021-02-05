@@ -100,10 +100,10 @@ def evaluate_tilt_angle(
 
 
 if __name__ == "__main__":
-    from miniplant.locations import PLATAFORMA_SOLAR_ALMERIA
+    from miniplant.locations import EINDHOVEN
 
-    site = PLATAFORMA_SOLAR_ALMERIA
+    site = EINDHOVEN
 
-    tilt_range = [20, 15]
+    tilt_range = [5, 10, 15, 20, 25, 30, 35, 40, 50, 55, 60, 65, 70, 75, 80, 85, 90]
     for tilt in tilt_range:
-        evaluate_tilt_angle(tilt_angle=tilt, location=PLATAFORMA_SOLAR_ALMERIA, workers=4)
+        evaluate_tilt_angle(tilt_angle=tilt, location=EINDHOVEN, workers=4)
