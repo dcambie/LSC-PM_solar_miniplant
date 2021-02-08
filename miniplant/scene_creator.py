@@ -41,7 +41,7 @@ ACN_RI = 1.344
 INCH = 0.0254  # meters
 
 
-def _create_scene_common(tilt_angle, light_source) -> Scene:
+def _create_scene_common(tilt_angle, light_source, include_dye: bool = True) -> Scene:
     logger = logging.getLogger("pvtrace").getChild("miniplant")
     logger.debug(f"Creating simulation scene w/ angle={tilt_angle}deg...")
 
@@ -55,6 +55,16 @@ def _create_scene_common(tilt_angle, light_source) -> Scene:
     # Bind the light source to the current world
     light_source.parent = world
 
+    # LSC-PM matrix
+    matrix_component = [Absorber(coefficient=0.1)]  # PMMA background absorption
+    if include_dye:
+        matrix_component.append(Luminophore(
+            coefficient=pd.read_csv(LR305_ABS_DATAFILE, sep="\t").values,
+            emission=pd.read_csv(LR305_EMS_DATAFILE, sep="\t").values,
+            quantum_yield=0.95,
+            phase_function=isotropic,
+        ))
+
     # LSC object
     reactor = Node(
         name="LSC-PM Reactor 47x47 cm^2",
@@ -62,15 +72,7 @@ def _create_scene_common(tilt_angle, light_source) -> Scene:
             size=(0.47, 0.47, 0.008),
             material=Material(
                 refractive_index=PMMA_RI,
-                components=[
-                    Luminophore(
-                        coefficient=pd.read_csv(LR305_ABS_DATAFILE, sep="\t").values,
-                        emission=pd.read_csv(LR305_EMS_DATAFILE, sep="\t").values,
-                        quantum_yield=0.95,
-                        phase_function=isotropic,
-                    ),
-                    Absorber(coefficient=0.1),  # PMMA background absorption
-                ],
+                components=matrix_component,
             ),
         ),
         parent=world,
@@ -138,6 +140,7 @@ def create_direct_scene(
     solar_elevation: float = 30,
     solar_azimuth: float = 180,
     solar_spectrum_function: Callable = lambda: 555,
+    include_dye: bool = None
 ) -> Scene:
     """ Create a scene with a fixed light position and direction, to match direct irradiation """
 
@@ -160,10 +163,11 @@ def create_direct_scene(
     )
     solar_light.translate(solar_light_vector)
 
-    return _create_scene_common(tilt_angle=tilt_angle, light_source=solar_light)
+    return _create_scene_common(tilt_angle=tilt_angle, light_source=solar_light, include_dye=include_dye)
 
 
-def create_diffuse_scene(tilt_angle: float = 30, solar_spectrum_function: Callable = lambda: 555):
+def create_diffuse_scene(tilt_angle: float = 30, solar_spectrum_function: Callable = lambda: 555,
+                         include_dye: bool = None):
     """ Create a scene with a random light position, to match diffuse irradiation """
 
     solar_light = Node(
@@ -174,4 +178,4 @@ def create_diffuse_scene(tilt_angle: float = 30, solar_spectrum_function: Callab
         ),
         parent=None,
     )
-    return _create_scene_common(tilt_angle=tilt_angle, light_source=solar_light)
+    return _create_scene_common(tilt_angle=tilt_angle, light_source=solar_light, include_dye=include_dye)

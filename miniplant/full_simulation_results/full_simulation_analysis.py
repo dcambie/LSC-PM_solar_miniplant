@@ -14,6 +14,7 @@ GOLDEN_RATIO = (1 + 5 ** 0.5) / 2
 
 search_path = Path(".")
 result_files = list(search_path.rglob('*.csv'))
+result_files = [Path("./Eindhoven/Eindhoven_0deg_results.csv"), Path("./Eindhoven/Eindhoven_40deg_results.csv")]
 
 
 fig, ax = plt.subplots(ncols=len(result_files))

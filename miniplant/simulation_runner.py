@@ -56,13 +56,17 @@ def run_direct_simulation(
     num_photons: int = 100,
     render: bool = False,
     workers: int = None,
+    include_dye: bool = None
 ) -> float:
-    # Create scene with the provided parameters
+    """
+    Create a scene for direct irradiation with the provided parameters and runs a simulation on it
+    """
     scene = create_direct_scene(
         tilt_angle=tilt_angle,
         solar_elevation=solar_elevation,
         solar_azimuth=solar_azimuth,
         solar_spectrum_function=solar_spectrum_function,
+        include_dye=include_dye
     )
     return _common_simulation_runner(scene, num_photons, render, workers)
 
@@ -73,15 +77,18 @@ def run_diffuse_simulation(
     num_photons: int = 100,
     render: bool = False,
     workers: int = None,
+    include_dye: bool = None
 ) -> float:
-    # Create scene with the provided parameters
+    """
+    Create a scene for diffuse irradiation with the provided parameters and runs a simulation on it
+    """
     scene = create_diffuse_scene(
-        tilt_angle=tilt_angle, solar_spectrum_function=solar_spectrum_function
+        tilt_angle=tilt_angle, solar_spectrum_function=solar_spectrum_function, include_dye=include_dye
     )
     return _common_simulation_runner(scene, num_photons, render, workers)
 
 
 if __name__ == "__main__":
-    run_diffuse_simulation(tilt_angle=60, render=True, workers=1, num_photons=400)
-    # run_direct_simulation(tilt_angle=10, render=True, workers=1)
+    run_diffuse_simulation(tilt_angle=60, render=True, workers=1, num_photons=400, include_dye=True)
+    # run_direct_simulation(tilt_angle=10, render=True, workers=1, include_dye=True)
     input()
