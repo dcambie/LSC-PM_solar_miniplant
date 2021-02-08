@@ -104,6 +104,6 @@ if __name__ == "__main__":
 
     site = EINDHOVEN
 
-    tilt_range = [5, 10, 15, 20, 25, 30, 35, 40, 50, 55, 60, 65, 70, 75, 80, 85, 90]
+    tilt_range = [0, 45]
     for tilt in tilt_range:
-        evaluate_tilt_angle(tilt_angle=tilt, location=EINDHOVEN, workers=4)
+        evaluate_tilt_angle(tilt_angle=tilt, location=EINDHOVEN, workers=12)
