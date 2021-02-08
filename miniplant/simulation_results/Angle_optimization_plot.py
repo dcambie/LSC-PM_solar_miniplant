@@ -41,7 +41,10 @@ for location in LOCATIONS:
 
         # Yearly total for this tilt angle
         x.append(angle)
-        y.append(df["dni_reacted"].sum())
+        try:
+            y.append(df["dni_reacted"].sum())
+        except KeyError:
+            y.append(df["direct_reacted"].sum())
 
     # Skip plot if no data are available
     if len(y) == 0:

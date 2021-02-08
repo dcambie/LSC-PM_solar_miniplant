@@ -3,8 +3,10 @@ Performs a screening for the yearly performance of a LSC-PM with different tilt 
 """
 
 import time
+import logging
 import datetime
 from pathlib import Path
+from tqdm import tqdm
 
 import os
 
@@ -12,7 +14,14 @@ import os
 # See pvtrace issue #48
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
+os.environ["NUMEXPR_MAX_THREADS"] = "1"
 os.environ["OMP_NUM_THREADS"] = "1"
+
+
+# Set loggers (no output needed for progress bar to work!)
+logging.getLogger("trimesh").disabled = True
+logging.getLogger("shapely.geos").disabled = True
+logging.getLogger("pvtrace").setLevel(logging.WARNING)  # use logging.DEBUG for more printouts
 
 import numpy as np
 import pandas as pd
@@ -25,6 +34,7 @@ from miniplant.solar_data import solar_data_for_place_and_time
 from miniplant.utils import PhotonFactory
 
 RAYS_PER_SIMULATIONS = 100
+INCLUDE_DYE = True
 
 logger = logging.getLogger("pvtrace").getChild("miniplant")
 
@@ -35,6 +45,7 @@ def evaluate_tilt_angle(
     workers: int = None,
     time_resolution: int = 1800,
 ):
+    """ Run a simulation with the given tilt angle/location combination and save results as CSV """
     logger.info(f"Starting simulation w/ tilt angle {tilt_angle}")
 
     solar_data = solar_data_for_place_and_time(
@@ -68,40 +79,35 @@ def evaluate_tilt_angle(
             solar_spectrum_function=direct_photon_factory,
             num_photons=RAYS_PER_SIMULATIONS,
             workers=workers,
+            include_dye=INCLUDE_DYE
         )
         df["direct_reacted"] = df["simulation_direct"] * df["direct_irradiance"]
 
         return df
 
     start_time = time.time()
-    results = solar_data.apply(calculate_productivity_for_datapoint, axis=1)
+    tqdm.pandas()  # Shows nice progress bar
+    results = solar_data.progress_apply(calculate_productivity_for_datapoint, axis=1)
     print(f"Simulation ended in {(time.time() - start_time) / 60:.1f} minutes!")
 
-    target_file = Path(
-        f"fake_simulation_results/{location.name}/{location.name}_{tilt_angle}deg_results.csv"
-    )
+    prefix = f"simulation_results/{location.name}/{location.name}"
+    if not INCLUDE_DYE:
+        prefix += " _no_dye"
+    target_file = Path(f"{prefix}_{np.abs(tilt_angle)}deg_results.csv")
 
     target_file.parent.mkdir(parents=True, exist_ok=True)
     # Saved CSV now include direct_irradiation_simulation_result and dni_reacted! :)
     results.to_csv(
         target_file,
-        columns=("apparent_elevation", "azimuth", "simulation_direct", "dni_reacted"),
+        columns=("apparent_elevation", "azimuth", "simulation_direct", "direct_reacted"),
     )
 
 
 if __name__ == "__main__":
-    # Set loggers
-    logging.getLogger("trimesh").disabled = True
-    logging.getLogger("shapely.geos").disabled = True
-    logging.getLogger("pvtrace").setLevel(logging.INFO)  # use logging.DEBUG for more printouts
+    from miniplant.locations import NORTH_CAPE
 
-    from miniplant.locations import EINDHOVEN
+    site = NORTH_CAPE
 
-    site = EINDHOVEN
-
-    # Run simulations with the following time range
-
-    tilt_range = [75, 80, 85, 90]
-
+    tilt_range = [35, 40, 45, 50, 55, 60, 65]
     for tilt in tilt_range:
-        evaluate_tilt_angle(tilt_angle=tilt, location=EINDHOVEN, workers=4, time_resolution=3600)
+        evaluate_tilt_angle(tilt_angle=tilt, location=site, workers=12)

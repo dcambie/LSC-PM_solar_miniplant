@@ -102,7 +102,7 @@ def yearlong_simulation(
 
     # Results will be saved in the following CSV file
     target_file = Path(
-        f"test_simulation_results/{location.name}/{location.name}_{tilt_angle}deg_results.csv"
+        f"full_simulation_results/{location.name}/{location.name}_{tilt_angle}deg_results.csv"
     )
     target_file.parent.mkdir(parents=True, exist_ok=True)  # Ensure folder existence
     results.to_csv(
@@ -128,4 +128,4 @@ if __name__ == "__main__":
 
     site = EINDHOVEN
 
-    yearlong_simulation(tilt_angle=45, location=EINDHOVEN, workers=12, time_resolution=60 * 30)
+    yearlong_simulation(tilt_angle=40, location=EINDHOVEN, workers=12, time_resolution=60 * 30)
