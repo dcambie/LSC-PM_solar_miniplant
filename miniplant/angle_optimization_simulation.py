@@ -92,7 +92,7 @@ def evaluate_tilt_angle(
 
     prefix = f"simulation_results/{location.name}/{location.name}"
     if not INCLUDE_DYE:
-        prefix += " _no_dye"
+        prefix += "_no_dye"
     target_file = Path(f"{prefix}_{np.abs(tilt_angle)}deg_results.csv")
 
     target_file.parent.mkdir(parents=True, exist_ok=True)
