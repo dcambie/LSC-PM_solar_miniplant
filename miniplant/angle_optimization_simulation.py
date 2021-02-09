@@ -33,8 +33,8 @@ from miniplant.simulation_runner import run_direct_simulation
 from miniplant.solar_data import solar_data_for_place_and_time
 from miniplant.utils import PhotonFactory
 
-RAYS_PER_SIMULATIONS = 100
-INCLUDE_DYE = True
+RAYS_PER_SIMULATIONS = 500
+INCLUDE_DYE = False
 
 logger = logging.getLogger("pvtrace").getChild("miniplant")
 
@@ -104,10 +104,10 @@ def evaluate_tilt_angle(
 
 
 if __name__ == "__main__":
-    from miniplant.locations import NORTH_CAPE
+    from miniplant.locations import EINDHOVEN
 
-    site = NORTH_CAPE
+    site = EINDHOVEN
 
-    tilt_range = [35, 40, 45, 50, 55, 60, 65]
+    tilt_range = list(range(0, 91, 5))
     for tilt in tilt_range:
         evaluate_tilt_angle(tilt_angle=tilt, location=site, workers=12)
