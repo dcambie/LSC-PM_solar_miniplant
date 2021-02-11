@@ -96,7 +96,7 @@ def yearlong_simulation(
         return df
 
     start_time = time.time()
-    tqdm.pandas()  # Shows nice progress bar
+    tqdm.pandas(desc=f"{location.name} {tilt_angle}deg")  # Shows nice progress bar
     results = solar_data.progress_apply(calculate_productivity_for_datapoint, axis=1)
     print(f"Simulation ended in {(time.time() - start_time) / 60:.1f} minutes!")
 

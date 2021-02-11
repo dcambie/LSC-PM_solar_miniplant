@@ -33,7 +33,7 @@ from miniplant.simulation_runner import run_direct_simulation
 from miniplant.solar_data import solar_data_for_place_and_time
 from miniplant.utils import PhotonFactory
 
-RAYS_PER_SIMULATIONS = 500
+RAYS_PER_SIMULATIONS = 100
 INCLUDE_DYE = False
 
 logger = logging.getLogger("pvtrace").getChild("miniplant")
@@ -85,10 +85,11 @@ def evaluate_tilt_angle(
 
         return df
 
-    start_time = time.time()
-    tqdm.pandas()  # Shows nice progress bar
+    start_time = time.perf_counter()
+    tqdm.pandas(desc=f"{location.name} {tilt_angle}deg", position=1)  # Shows nice progress bar
+    from tqdm import gui
     results = solar_data.progress_apply(calculate_productivity_for_datapoint, axis=1)
-    print(f"Simulation ended in {(time.time() - start_time) / 60:.1f} minutes!")
+    print(f"Simulation ended in {(time.perf_counter() - start_time) / 60:.1f} minutes!")
 
     prefix = f"simulation_results/{location.name}/{location.name}"
     if not INCLUDE_DYE:
@@ -110,4 +111,4 @@ if __name__ == "__main__":
 
     tilt_range = list(range(0, 91, 5))
     for tilt in tilt_range:
-        evaluate_tilt_angle(tilt_angle=tilt, location=site, workers=12)
+        evaluate_tilt_angle(tilt_angle=tilt, location=site, workers=12, time_resolution=360000)
