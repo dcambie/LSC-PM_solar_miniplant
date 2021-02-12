@@ -124,8 +124,8 @@ if __name__ == "__main__":
     logging.getLogger("shapely.geos").disabled = True
     logging.getLogger("pvtrace").setLevel(logging.WARNING)  # use logging.DEBUG for more printouts
 
-    from miniplant.locations import EINDHOVEN
+    from miniplant.locations import PLATAFORMA_SOLAR_ALMERIA
 
-    site = EINDHOVEN
+    site = PLATAFORMA_SOLAR_ALMERIA
 
-    yearlong_simulation(tilt_angle=40, location=EINDHOVEN, workers=12, time_resolution=60 * 30)
+    yearlong_simulation(tilt_angle=30, location=site, workers=12, time_resolution=60 * 30)
