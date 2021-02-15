@@ -105,10 +105,10 @@ def evaluate_tilt_angle(
 
 
 if __name__ == "__main__":
-    from miniplant.locations import NORTH_CAPE
+    from miniplant.locations import TOWNSVILLE
 
-    site = NORTH_CAPE
+    site = TOWNSVILLE
 
-    tilt_range = list(range(40, 71, 5))
+    tilt_range = list(range(0, -40, -5))
     for tilt in tilt_range:
         evaluate_tilt_angle(tilt_angle=tilt, location=site, workers=12, time_resolution=1800)
