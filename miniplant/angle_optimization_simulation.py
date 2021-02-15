@@ -34,7 +34,7 @@ from miniplant.solar_data import solar_data_for_place_and_time
 from miniplant.utils import PhotonFactory
 
 RAYS_PER_SIMULATIONS = 100
-INCLUDE_DYE = False
+INCLUDE_DYE = True
 
 logger = logging.getLogger("pvtrace").getChild("miniplant")
 

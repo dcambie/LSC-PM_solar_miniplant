@@ -9,6 +9,7 @@ from miniplant.locations import LOCATIONS
 GOLDEN_RATIO = (1 + 5 ** 0.5) / 2
 
 for location in LOCATIONS:
+    print(f"Working on {location.name}")
     # Define MatPlotLib figure
     fig, ax = plt.subplots(figsize=plt.figaspect(1 / GOLDEN_RATIO))
     ax.set(
@@ -72,4 +73,4 @@ for location in LOCATIONS:
     )
 
     plt.savefig(f"Angle_optimization_results_{location.name}.png", dpi=300)
-    plt.show()
+#    plt.show()
