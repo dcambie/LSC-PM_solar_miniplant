@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="miniplant",
-    version="0.9.1",
+    version="0.9.2",
     author="Dario Cambie",
     author_email="dario.cambie@mpikg.mpg.de",
     description="A package to run pvtrace simulations on LSC-PMs",
@@ -13,7 +13,9 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/dcambie/LSC-PM_solar_miniplant",
     packages=setuptools.find_packages(),
-    install_requires=['pvtrace>=2.0.0', 'pvlib>=0.8.1', 'tables', 'tqdm>=4.9.0',
-                      'meshcat @ git+https://github.com/rdeits/meshcat-python.git'],
-    python_requires='>=3.6',
+    install_requires=['pvlib>=0.8.1', 'tables', 'tqdm>=4.9.0','meshcat>0.1.1',
+                      'pvtrace @ git+https://github.com/danieljfarrell/pvtrace.git@cli'],
+    python_requires='>=3.7',
+    package_data={'miniplant': ['*.tsv']},
+    zip_safe=True
 )

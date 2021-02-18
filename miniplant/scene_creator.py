@@ -1,3 +1,4 @@
+import io
 import logging
 from typing import Callable
 
@@ -27,10 +28,14 @@ from miniplant.utils import (
     IsotropicPhotonGenerator,
 )
 
+import pkgutil
+from miniplant import reactor_data
+
 REACTOR_AREA_IN_M2 = 0.47 * 0.47
-MB_ABS_DATAFILE = "reactor_data/MB_1M_1m_ACN.txt"
-LR305_ABS_DATAFILE = "reactor_data/Evonik_lr305_normalized_to_1m.txt"
-LR305_EMS_DATAFILE = "reactor_data/Evonik_lr305_normalized_to_1m_ems.txt"
+
+MB_ABS_DATAFILE = pkgutil.get_data(__name__, "reactor_data/MB_1M_1m_ACN.tsv")
+LR305_ABS_DATAFILE = pkgutil.get_data(__name__, "reactor_data/Evonik_lr305_normalized_to_1m.tsv")
+LR305_EMS_DATAFILE = pkgutil.get_data(__name__, "reactor_data/Evonik_lr305_normalized_to_1m_ems.tsv")
 
 # Refractive indexes
 PMMA_RI = 1.48
@@ -63,8 +68,8 @@ def _create_scene_common(tilt_angle, light_source, include_dye=None) -> Scene:
 
     if include_dye:
         matrix_component.append(Luminophore(
-            coefficient=pd.read_csv(LR305_ABS_DATAFILE, sep="\t").values,
-            emission=pd.read_csv(LR305_EMS_DATAFILE, sep="\t").values,
+            coefficient=pd.read_csv(io.BytesIO(LR305_ABS_DATAFILE), encoding="utf8", sep="\t").values,
+            emission=pd.read_csv(io.BytesIO(LR305_EMS_DATAFILE), encoding="utf8", sep="\t").values,
             quantum_yield=0.95,
             phase_function=isotropic,
         ))
@@ -87,7 +92,7 @@ def _create_scene_common(tilt_angle, light_source, include_dye=None) -> Scene:
     r_mix = []
 
     # Reaction Mixture absorption
-    reaction_absorption_coefficient = pd.read_csv(MB_ABS_DATAFILE, sep="\t").values
+    reaction_absorption_coefficient = pd.read_csv(io.BytesIO(MB_ABS_DATAFILE), encoding="utf8", sep="\t").values
     reaction_mixture_material = Reactor(reaction_absorption_coefficient)
 
     # Create PFA 1/8" capillaries and their reaction mixture
