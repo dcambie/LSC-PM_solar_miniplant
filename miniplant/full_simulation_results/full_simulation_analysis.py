@@ -15,8 +15,9 @@ GOLDEN_RATIO = (1 + 5 ** 0.5) / 2
 search_path = Path(".")
 result_files = list(search_path.rglob('*.csv'))
 result_files = [Path("./Eindhoven/Eindhoven_0deg_results.csv"), Path("./Eindhoven/Eindhoven_40deg_results.csv"),
-                Path("./North Cape/North Cape_50deg_results.csv"), Path("./Townsville/Townsville_-10deg_results.csv"),
-                Path("./Plataforma Solar de Almería/Plataforma Solar de Almería_30deg_results.csv")]
+                Path("North Cape/North Cape_50deg_results_no_dye.csv"), Path(
+        "Townsville/Townsville_-10deg_results_no_dye.csv"),
+                Path("Plataforma Solar de Almería/Plataforma Solar de Almería_30deg_results_no_dye.csv")]
 
 
 fig, ax = plt.subplots(ncols=len(result_files))

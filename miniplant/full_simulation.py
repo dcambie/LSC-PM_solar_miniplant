@@ -122,8 +122,9 @@ if __name__ == "__main__":
     logging.getLogger("shapely.geos").disabled = True
     logging.getLogger("pvtrace").setLevel(logging.WARNING)  # use logging.DEBUG for more printouts
 
-    from miniplant.locations import TOWNSVILLE
+    from miniplant.locations import TOWNSVILLE, PLATAFORMA_SOLAR_ALMERIA, NORTH_CAPE
+    sim_to_run = [(TOWNSVILLE, -1), (PLATAFORMA_SOLAR_ALMERIA, 30), (NORTH_CAPE, 50)]
 
-    site = TOWNSVILLE
-
-    yearlong_simulation(tilt_angle=-10, location=site, workers=12, time_resolution=60 * 30)
+    for sim_params in sim_to_run:
+        print(f"Now simulating {sim_params[0].name} at {sim_params[1]} deg tilt angle")
+        yearlong_simulation(tilt_angle=sim_params[1], location=sim_params[0], workers=12, time_resolution=60 * 30)
