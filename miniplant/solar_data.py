@@ -154,7 +154,19 @@ def solar_data_for_place_and_time(
 
 
 if __name__ == "__main__":
-    from miniplant.locations import NORTH_CAPE
+    from miniplant.locations import LOCATIONS
 
-    # perform calculations
-    test_df = solar_data_for_place_and_time(NORTH_CAPE, 30, 36000)
+    tilt = {
+        "Townsville": -10,
+        "Eindhoven": 40,
+        "Plataforma Solar de Almería": 30,
+        "North Cape": 50
+    }
+
+    for site in LOCATIONS:
+        # Calculate solar spectrum and position per every time point
+        test_df = solar_data_for_place_and_time(site, tilt[site.name], 60 * 30)
+
+        with pd.option_context('display.max_columns', 40):
+            print(test_df.describe())
+

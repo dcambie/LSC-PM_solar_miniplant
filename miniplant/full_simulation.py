@@ -53,9 +53,7 @@ def yearlong_simulation(
 ):
     logger.info(f"Starting simulation w/ tilt angle {tilt_angle}")
 
-    solar_data = solar_data_for_place_and_time(
-        location, tilt_angle, time_resolution=time_resolution
-    )
+    solar_data = solar_data_for_place_and_time(location, tilt_angle, time_resolution)
 
     def calculate_productivity_for_datapoint(df):
         """
