@@ -41,7 +41,7 @@ ACN_RI = 1.344
 INCH = 0.0254  # meters
 
 
-def _create_scene_common(tilt_angle, light_source, include_dye: bool = True) -> Scene:
+def _create_scene_common(tilt_angle, light_source, include_dye=None) -> Scene:
     logger = logging.getLogger("pvtrace").getChild("miniplant")
     logger.debug(f"Creating simulation scene w/ angle={tilt_angle}deg...")
 
@@ -57,6 +57,10 @@ def _create_scene_common(tilt_angle, light_source, include_dye: bool = True) -> 
 
     # LSC-PM matrix
     matrix_component = [Absorber(coefficient=0.1)]  # PMMA background absorption
+
+    if include_dye is None:
+        include_dye = True
+
     if include_dye:
         matrix_component.append(Luminophore(
             coefficient=pd.read_csv(LR305_ABS_DATAFILE, sep="\t").values,
