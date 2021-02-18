@@ -14,7 +14,7 @@ setuptools.setup(
     url="https://github.com/dcambie/LSC-PM_solar_miniplant",
     packages=setuptools.find_packages(),
     install_requires=['pvlib>=0.8.1', 'tables', 'tqdm>=4.9.0','meshcat>=0.1.1',
-                      'pvtrace @ git+https://github.com/danieljfarrell/pvtrace.git@cli'],
+                      'pvtrace @ git+https://github.com/danieljfarrell/pvtrace.git@feature/cli'],
     python_requires='>=3.7',
     package_data={'miniplant': ['*.tsv']},
     zip_safe=True
