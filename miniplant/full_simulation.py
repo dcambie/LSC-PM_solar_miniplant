@@ -123,7 +123,7 @@ if __name__ == "__main__":
     logging.getLogger("pvtrace").setLevel(logging.WARNING)  # use logging.DEBUG for more printouts
 
     from miniplant.locations import TOWNSVILLE, PLATAFORMA_SOLAR_ALMERIA, NORTH_CAPE
-    sim_to_run = [(TOWNSVILLE, -1), (PLATAFORMA_SOLAR_ALMERIA, 30), (NORTH_CAPE, 50)]
+    sim_to_run = [(TOWNSVILLE, -10), (PLATAFORMA_SOLAR_ALMERIA, 30), (NORTH_CAPE, 50)]
 
     for sim_params in sim_to_run:
         print(f"Now simulating {sim_params[0].name} at {sim_params[1]} deg tilt angle")
