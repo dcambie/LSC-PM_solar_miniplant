@@ -96,32 +96,40 @@ def _create_scene_common(tilt_angle, light_source, include_dye=None) -> Scene:
     reaction_mixture_material = Reactor(reaction_absorption_coefficient)
 
     # Create PFA 1/8" capillaries and their reaction mixture
-    for capillary_num in range(16):
-        capillary.append(
-            Node(
-                name=f"Capillary_PFA_{capillary_num}",
-                geometry=Cylinder(
+    pfa_cil = Cylinder(
                     length=0.47,
                     radius=(1 / 8 * INCH) / 2,
                     material=Material(
                         refractive_index=PFA_RI,
                         components=[Absorber(coefficient=0.1)],  # PFA background absorption
-                    ),
-                ),
+                        )
+                    )
+    pfa_cil.color = 0xeeeeee
+    pfa_cil.transparency = True
+    pfa_cil.opacity = 0.5
+
+    for capillary_num in range(16):
+        capillary.append(
+            Node(
+                name=f"Capillary_PFA_{capillary_num}",
+                geometry=pfa_cil,
                 parent=reactor,
             )
         )
 
+
+        reaction_cil = Cylinder(
+                    length=0.47,
+                    radius=(1 / 16 * INCH) / 2,
+                    material=Material(refractive_index=ACN_RI, components=[reaction_mixture_material]))
+        reaction_cil.color = 0x0000ff
+        reaction_cil.transparency = False
+        reaction_cil.opacity = 1
+
         r_mix.append(
             Node(
                 name=f"Reaction_mixture_{capillary_num}",
-                geometry=Cylinder(
-                    length=0.47,
-                    radius=(1 / 16 * INCH) / 2,
-                    material=Material(
-                        refractive_index=ACN_RI, components=[reaction_mixture_material]
-                    ),
-                ),
+                geometry=reaction_cil,
                 parent=capillary[-1],
             )
         )
