@@ -44,7 +44,6 @@ for location in LOCATIONS:
         x.append(angle)
         try:
             y.append(df["dni_reacted"].sum())
-            print(f"SUM FOR {angle} in {location} IS {df['direct_reacted'].sum()}")
         except KeyError:
             y.append(df["direct_reacted"].sum())
 
