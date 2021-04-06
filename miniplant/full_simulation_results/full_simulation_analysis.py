@@ -56,7 +56,7 @@ for ix, simulation_results_file in enumerate(result_files):
     ax[ix].xaxis.set_major_formatter(date_form)
     ax[ix].xaxis.set_major_locator(mdates.MonthLocator(interval=3))
 
-    ax[ix].plot(daily.index, daily["total_reacted"])
+    ax[ix].plot(daily.index, daily["total_reacted"], linewidth=0.5) 
     # Add legend
     ax[ix].fill_between(daily.index, 0, daily["direct_reacted"], alpha=0.5, label="direct irradiation")
     ax[ix].fill_between(daily.index, daily["direct_reacted"], daily["total_reacted"], alpha=0.5, label="diffuse irradiation")
