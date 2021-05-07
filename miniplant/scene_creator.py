@@ -167,7 +167,6 @@ def create_direct_scene(
     )
 
     reversed_solar_light_vector = VectorInverter(solar_light_vector)
-
     # Create light
     solar_light = Node(
         name="Solar Light",
