@@ -14,7 +14,7 @@ logger = logging.getLogger("pvtrace").getChild("miniplant")
 
 
 def _common_simulation_runner(
-    scene: Scene, num_photons: int = 100, render: bool = False, workers: int = None
+    scene: Scene, num_photons: int = 100, render: bool = False, workers: int = 1,
 ):
     logger.debug(f"Starting ray-tracing with {num_photons} photons (Render is {render})")
 
@@ -55,9 +55,10 @@ def run_direct_simulation(
     solar_spectrum_function: Callable = lambda: 555,
     num_photons: int = 100,
     render: bool = False,
-    workers: int = None,
-    include_dye: bool = None
-) -> float:
+    workers: int = 1,
+    include_dye: bool = None,
+    **kwargs
+):
     """
     Create a scene for direct irradiation with the provided parameters and runs a simulation on it
     """
@@ -76,9 +77,9 @@ def run_diffuse_simulation(
     solar_spectrum_function: Callable = lambda: 555,
     num_photons: int = 100,
     render: bool = False,
-    workers: int = None,
+    workers: int = 1,
     include_dye: bool = None
-) -> float:
+):
     """
     Create a scene for diffuse irradiation with the provided parameters and runs a simulation on it
     """
