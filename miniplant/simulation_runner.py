@@ -21,10 +21,13 @@ def _common_simulation_runner(
     if render and workers > 1:
         raise RuntimeError("Sorry, cannot use renderer if more than 1 worker is used!")
 
+    bottomPV_count = 0
+    sidePV_count = 0
+    photon_path = []
     # SINGLE-THREADED
     if workers == 1:
         if render:
-            renderer = MeshcatRenderer(wireframe=False, open_browser=True, transparency=True, opacity=0.5)
+            renderer = MeshcatRenderer(open_browser=True)
             renderer.render(scene)
         finals = []
         for ray in scene.emit(num_photons):
@@ -33,6 +36,18 @@ def _common_simulation_runner(
             finals.append(events[-1])
             if render:
                 renderer.add_ray_path(path)
+
+
+            from pvtrace.algorithm.photon_tracer import next_hit
+            myray=steps[-1][0]
+            intersect = next_hit(scene, myray)
+            side_PV = {"sidePV1", "sidePV2", "sidePV3", "sidePV4"}
+            if intersect and intersect[0].name == "bottomPV":
+                bottomPV_count += 1
+            if intersect and intersect[0].name in side_PV:
+                sidePV_count += 1
+
+            photon_path.append(path)
     else:
         if render:
             logger.warning(
@@ -45,7 +60,13 @@ def _common_simulation_runner(
     count_events = collections.Counter(finals)
     reacted_fraction = count_events[Event.REACT] / num_photons
     logger.debug(f"*** SIMULATION ENDED *** (Efficiency was {reacted_fraction:.3f})")
-    return reacted_fraction
+    if bottomPV_count > 0:
+        logger.info(f"The bottom PV absorbed {bottomPV_count} photons (i.e. {bottomPV_count/num_photons * 100 :.2f} %) ")
+    if sidePV_count > 0:
+        logger.info(
+            f"The side PV absorbed {sidePV_count} photons (i.e. {sidePV_count / num_photons * 100 :.2f} %) ")
+
+    return reacted_fraction, scene, photon_path, bottomPV_count, sidePV_count
 
 
 def run_direct_simulation(
@@ -67,7 +88,8 @@ def run_direct_simulation(
         solar_elevation=solar_elevation,
         solar_azimuth=solar_azimuth,
         solar_spectrum_function=solar_spectrum_function,
-        include_dye=include_dye
+        include_dye=include_dye,
+        **kwargs
     )
     return _common_simulation_runner(scene, num_photons, render, workers)
 
@@ -84,12 +106,18 @@ def run_diffuse_simulation(
     Create a scene for diffuse irradiation with the provided parameters and runs a simulation on it
     """
     scene = create_diffuse_scene(
-        tilt_angle=tilt_angle, solar_spectrum_function=solar_spectrum_function, include_dye=include_dye
+        tilt_angle=tilt_angle, solar_spectrum_function=solar_spectrum_function, include_dye=include_dye,
     )
     return _common_simulation_runner(scene, num_photons, render, workers)
 
 
 if __name__ == "__main__":
-    run_diffuse_simulation(tilt_angle=0, render=True, workers=1, num_photons=100, include_dye=True)
+    res = run_direct_simulation(tilt_angle=40, solar_elevation=50, solar_azimuth=180, add_bottom_PV=True, render=True,
+                                add_side_PV=True, num_photons=100)
+
+    bottom = res[-2]
+    side = res[-1]
+    print(f"SIMU ENDED - bottom={bottom} side={side}")
+
     # run_direct_simulation(tilt_angle=10, render=True, workers=1, include_dye=True)
     input()

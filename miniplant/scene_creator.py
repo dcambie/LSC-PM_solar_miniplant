@@ -46,7 +46,7 @@ ACN_RI = 1.344
 INCH = 0.0254  # meters
 
 
-def _create_scene_common(tilt_angle, light_source, include_dye=None) -> Scene:
+def _create_scene_common(tilt_angle, light_source, include_dye=None, **kwargs) -> Scene:
     logger = logging.getLogger("pvtrace").getChild("miniplant")
     logger.debug(f"Creating simulation scene w/ angle={tilt_angle}deg...")
 
@@ -86,6 +86,75 @@ def _create_scene_common(tilt_angle, light_source, include_dye=None) -> Scene:
         ),
         parent=world,
     )
+
+    if kwargs.get("add_bottom_PV", False):
+        bottomPV = Node(
+            name="bottomPV",
+            geometry=Box(
+                size=(0.47, 0.47, 0.008),
+                material=Material(refractive_index=3.4, components=[Absorber(coefficient=1e10)],
+                                  color=0x000000,
+                                  transparent=False,
+                                  opacity=0.5,
+                                  ),
+            ),
+            parent=reactor
+        )
+        bottomPV.translate((0, 0, -0.025,))
+
+    if kwargs.get("add_side_PV", False):
+        side1 = Node(
+            name="sidePV1",
+            geometry=Box(
+                size=(0.47, 0.01, 0.008),
+                material=Material(refractive_index=3.4, components=[Absorber(coefficient=1e10)],
+                                  color=0x000000,
+                                  transparent=False,
+                                  opacity=0.5,
+                                  ),
+            ),
+            parent=reactor
+        )
+        side1.translate((0, 0.47/2+0.005, 0,))
+        side2 = Node(
+            name="sidePV2",
+            geometry=Box(
+                size=(0.47, 0.01, 0.008),
+                material=Material(refractive_index=3.4, components=[Absorber(coefficient=1e10)],
+                                  color=0x000000,
+                                  transparent=False,
+                                  opacity=0.5,
+                                  ),
+            ),
+            parent=reactor
+        )
+        side2.translate((0, -0.47 / 2 - 0.005, 0,))
+        side3 = Node(
+            name="sidePV3",
+            geometry=Box(
+                size=(0.01, 0.47, 0.008),
+                material=Material(refractive_index=3.4, components=[Absorber(coefficient=1e10)],
+                                  color=0x000000,
+                                  transparent=False,
+                                  opacity=0.5,
+                                  ),
+            ),
+            parent=reactor
+        )
+        side3.translate((0.47 / 2 + 0.005, 0, 0,))
+        side4 = Node(
+            name="sidePV4",
+            geometry=Box(
+                size=(0.01, 0.47, 0.008),
+                material=Material(refractive_index=3.4, components=[Absorber(coefficient=1e10)],
+                                  color=0x000000,
+                                  transparent=False,
+                                  opacity=0.5,
+                                  ),
+            ),
+            parent=reactor
+        )
+        side4.translate((-0.47 / 2 - 0.005, 0, 0,))
 
     # Now we need to populate the LSC with the capillaries, that are made by outer tubing and reaction mixture
     capillary = []
@@ -157,7 +226,8 @@ def create_direct_scene(
     solar_elevation: float = 30,
     solar_azimuth: float = 180,
     solar_spectrum_function: Callable = lambda: 555,
-    include_dye: bool = None
+    include_dye: bool = None,
+    **kwargs
 ) -> Scene:
     """ Create a scene with a fixed light position and direction, to match direct irradiation """
 
@@ -180,7 +250,7 @@ def create_direct_scene(
     )
     solar_light.translate(solar_light_vector)
 
-    return _create_scene_common(tilt_angle=tilt_angle, light_source=solar_light, include_dye=include_dye)
+    return _create_scene_common(tilt_angle=tilt_angle, light_source=solar_light, include_dye=include_dye, **kwargs)
 
 
 def create_diffuse_scene(tilt_angle: float = 30, solar_spectrum_function: Callable = lambda: 555,
