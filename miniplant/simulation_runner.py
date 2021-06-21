@@ -66,7 +66,10 @@ def _common_simulation_runner(
         logger.info(
             f"The side PV absorbed {sidePV_count} photons (i.e. {sidePV_count / num_photons * 100 :.2f} %) ")
 
-    return reacted_fraction, scene, photon_path, bottomPV_count, sidePV_count
+    # This polymorphism in return type is bad, but the PV thing is only needed once and returning a list breaks things
+    if bottomPV_count > 0 or sidePV_count > 0:
+        return reacted_fraction, scene, photon_path, bottomPV_count, sidePV_count
+    return reacted_fraction
 
 
 def run_direct_simulation(
