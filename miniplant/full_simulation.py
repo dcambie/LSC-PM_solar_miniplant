@@ -50,6 +50,7 @@ def yearlong_simulation(
     workers: int = None,
     time_resolution: int = 1800,
     num_photons_per_simulation: int = 120,
+    include_dye: bool = True,
 ):
     logger.info(f"Starting simulation w/ tilt angle {tilt_angle}")
 
@@ -75,6 +76,7 @@ def yearlong_simulation(
             solar_spectrum_function=direct_photon_factory,
             num_photons=num_photons_per_simulation,
             workers=workers,
+            include_dye=include_dye,
         )
         df["direct_reacted"] = (
             df["simulation_direct"] * df["direct_irradiance"] * REACTOR_AREA_IN_M2
@@ -86,6 +88,7 @@ def yearlong_simulation(
             solar_spectrum_function=diffuse_photon_factory,
             num_photons=num_photons_per_simulation,
             workers=workers,
+            include_dye=include_dye,
         )
         df["diffuse_reacted"] = (
             df["simulation_diffuse"] * df["diffuse_irradiance"] * REACTOR_AREA_IN_M2
@@ -100,7 +103,7 @@ def yearlong_simulation(
 
     # Results will be saved in the following CSV file
     target_file = Path(
-        f"full_simulation_results/{location.name}/{location.name}_{tilt_angle}deg_results.csv"
+        f"full_simulation_results/{location.name}/{location.name}_{tilt_angle}deg_results_no_dye.csv"
     )
     target_file.parent.mkdir(parents=True, exist_ok=True)  # Ensure folder existence
     results.to_csv(
@@ -122,9 +125,10 @@ if __name__ == "__main__":
     logging.getLogger("shapely.geos").disabled = True
     logging.getLogger("pvtrace").setLevel(logging.WARNING)  # use logging.DEBUG for more printouts
 
-    from miniplant.locations import TOWNSVILLE, PLATAFORMA_SOLAR_ALMERIA, NORTH_CAPE
-    sim_to_run = [(TOWNSVILLE, -10), (PLATAFORMA_SOLAR_ALMERIA, 30), (NORTH_CAPE, 50)]
+    from miniplant.locations import EINDHOVEN
+    sim_to_run = [(EINDHOVEN, 40)]
 
     for sim_params in sim_to_run:
         print(f"Now simulating {sim_params[0].name} at {sim_params[1]} deg tilt angle")
-        yearlong_simulation(tilt_angle=sim_params[1], location=sim_params[0], workers=12, time_resolution=60 * 30)
+        yearlong_simulation(tilt_angle=sim_params[1], location=sim_params[0], workers=12, time_resolution=60 * 30,
+                            include_dye=False)
