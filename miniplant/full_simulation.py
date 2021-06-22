@@ -58,8 +58,7 @@ def yearlong_simulation(
 
     solar_data = solar_data_for_place_and_time(location, tilt_angle, time_resolution)
     if time_range:
-        solar_data.loc[time_range[0]:time_range[1]]
-
+        solar_data = solar_data.loc[time_range[0]:time_range[1]]
 
     def calculate_productivity_for_datapoint(df):
         """
