@@ -21,9 +21,14 @@ fig, ax = plt.subplots(ncols=1)
 
 # Load data
 df = pd.read_csv(result_files, parse_dates=[0], index_col=0, date_parser=lambda col: pd.to_datetime(col, utc=True))
+
 # Resample Hourly
-# hourly = df.resample("H").sum()
+# hourly = df.resample("H").sum()  # Instead of resampling and decreasing resolution just multiply by 2 the half-hourly
 hourly = df
+# converts 30-min base quantity to hourly data for plot
+hourly["diffuse_reacted"] = hourly["diffuse_reacted"] * 2
+hourly["direct_reacted"] = hourly["direct_reacted"] * 2
+
 # Sum direct and diffuse components
 hourly["total_reacted"] = hourly["diffuse_reacted"] + hourly["direct_reacted"]
 
