@@ -10,12 +10,12 @@ logging.getLogger("pvtrace").setLevel(logging.WARNING)  # use logging.DEBUG for 
 
 from miniplant.locations import EINDHOVEN
 
-xp_start = datetime(2020, 7, 15, 15, 0, tzinfo=EINDHOVEN.pytz)  # 15th July 3pm
-xp_end = datetime(2020, 7, 15, 17, 0, tzinfo=EINDHOVEN.pytz)  # 15th July 5pm
+XP_START = datetime(2020, 7, 15, 15, 0, tzinfo=EINDHOVEN.pytz)  # 15th July 3pm
+XP_END = datetime(2020, 7, 15, 17, 0, tzinfo=EINDHOVEN.pytz)  # 15th July 5pm
 
 target_file = Path(f"./experimental_conditions_results.csv")
 
-time_interval = (xp_start, xp_end)
+time_interval = (XP_START, XP_END)
 
 
 if __name__ == '__main__':
