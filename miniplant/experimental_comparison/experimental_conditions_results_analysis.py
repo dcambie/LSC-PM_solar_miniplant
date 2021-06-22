@@ -11,6 +11,7 @@ from matplotlib.dates import DateFormatter
 import matplotlib.ticker as mtick
 
 from miniplant.experimental_comparison.simulate_experimental_conditions import XP_END, XP_START
+from miniplant.locations import EINDHOVEN
 
 GOLDEN_RATIO = (1 + 5 ** 0.5) / 2
 
@@ -39,7 +40,7 @@ ax.set_ylabel("Hourly absorbed photon flux (mol/h)")
 ax.set_xlim([XP_START, XP_END])
 
 # Date formatter to only show the month from the datetime object, and locator to show every month
-date_form = DateFormatter("%H")  #  Show hour of the day
+date_form = DateFormatter("%H", tz=EINDHOVEN.pytz)  #  Show hour of the day
 # Location comparison
 # ax[ix].set_title(caption+f"TOT: {tot:.0f}")
 # Hardcoded titles
