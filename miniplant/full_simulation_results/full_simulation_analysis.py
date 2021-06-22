@@ -14,13 +14,21 @@ GOLDEN_RATIO = (1 + 5 ** 0.5) / 2
 
 search_path = Path(".")
 result_files = list(search_path.rglob('*.csv'))
-result_files = [Path("North Cape/North Cape_50deg_results.csv"), Path("./Eindhoven/Eindhoven_0deg_results.csv"),
-                Path("./Eindhoven/Eindhoven_40deg_results.csv"),Path("Townsville/Townsville_-10deg_results.csv"),
-                Path("Plataforma Solar de Almería/Plataforma Solar de Almería_30deg_results.csv")]
+result_files = [# Path("North Cape/North Cape_50deg_results.csv"),
+                # Path("./Eindhoven/Eindhoven_0deg_results.csv"),
+                Path("./Eindhoven/Eindhoven_40deg_results.csv"),
+                Path("./Eindhoven/Eindhoven_40deg_results_no_dye.csv"),
+                # Path("Townsville/Townsville_-10deg_results.csv"),
+                # Path("Plataforma Solar de Almería/Plataforma Solar de Almería_30deg_results.csv")
+                ]
 
 
 fig, ax = plt.subplots(ncols=len(result_files))
 maxy = 0  # Shared axis labels across plots
+
+# Dye vs. no-dye
+title = ["Standard conditions", "LSC-PM without dye"]
+iter_titles = iter(title)
 
 for ix, simulation_results_file in enumerate(result_files):
     # Extract location and angle from file name
@@ -47,7 +55,13 @@ for ix, simulation_results_file in enumerate(result_files):
     # Date formatter to only show the month from the datetime object, and locator to show every month
     date_form = DateFormatter("%b")  # %b Show month names %m for month numbers
     tot = daily["total_reacted"].sum()
-    ax[ix].set_title(caption+f"TOT: {tot:.0f}")
+    print(f"Yearly productivity: {tot}")
+    # Location comparison
+    # ax[ix].set_title(caption+f"TOT: {tot:.0f}")
+    # Hardcoded titles
+    title = next(iter_titles)
+    ax[ix].set_title(title)
+
 
     # ax[ix].suptitle = f"TOT: {tot}"
     if max(daily["total_reacted"])*1.05 > maxy:
@@ -67,5 +81,7 @@ for ix, simulation_results_file in enumerate(result_files):
         fig.legend(handles, labels, loc='lower center')
 
 fig.tight_layout()
-plt.show()
+plt.subplots_adjust(bottom=0.2) # Space for legend
+# plt.show()
+plt.savefig("EIN_dye_vs_no_dye.png", dpi=300)
 input()
