@@ -24,7 +24,7 @@ def irradiance_to_photon_flux(irradiance_per_nm, at_wavelength):
 
 
 def spectral_distribution_to_photon_distribution(distribution: Distribution, integration_time=1800):
-    """ Given a pvtrace Distribution in W/m^2 converts it into photon flux """
+    """ Given a pvtrace Distribution in W/m^2 converts it into photon flux (units from W to moles!) """
     photon_flux = []
 
     for wavelength, intensity in zip(distribution._x, distribution._y):
