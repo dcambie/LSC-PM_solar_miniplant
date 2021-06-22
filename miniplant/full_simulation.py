@@ -51,10 +51,15 @@ def yearlong_simulation(
     time_resolution: int = 1800,
     num_photons_per_simulation: int = 120,
     include_dye: bool = True,
+    time_range=None,
+    target_file=None
 ):
     logger.info(f"Starting simulation w/ tilt angle {tilt_angle}")
 
     solar_data = solar_data_for_place_and_time(location, tilt_angle, time_resolution)
+    if time_range:
+        solar_data.loc[time_range[0]:time_range[1]]
+
 
     def calculate_productivity_for_datapoint(df):
         """
@@ -102,9 +107,10 @@ def yearlong_simulation(
     print(f"Simulation ended in {(time.time() - start_time) / 60:.1f} minutes!")
 
     # Results will be saved in the following CSV file
-    target_file = Path(
-        f"full_simulation_results/{location.name}/{location.name}_{tilt_angle}deg_results_no_dye.csv"
-    )
+    if not target_file:
+        target_file = Path(
+            f"full_simulation_results/{location.name}/{location.name}_{tilt_angle}deg_results.csv"
+        )
     target_file.parent.mkdir(parents=True, exist_ok=True)  # Ensure folder existence
     results.to_csv(
         target_file,
@@ -131,4 +137,4 @@ if __name__ == "__main__":
     for sim_params in sim_to_run:
         print(f"Now simulating {sim_params[0].name} at {sim_params[1]} deg tilt angle")
         yearlong_simulation(tilt_angle=sim_params[1], location=sim_params[0], workers=12, time_resolution=60 * 30,
-                            include_dye=False)
+                            include_dye=True)
