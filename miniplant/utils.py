@@ -81,12 +81,14 @@ class VectorInverter:
 
 
 class LightPosition:
-    def __init__(self, tilt_angle):
+    def __init__(self, tilt_angle, LTF_width, LTF_length):
         self.tilt_angle = tilt_angle
+        self.LTF_width = LTF_width
+        self.LTF_length = LTF_length
         pass
 
     def __call__(self, *args, **kwargs):
-        position = rectangular_mask(0.47 / 2, 0.47 / 2)
+        position = rectangular_mask(self.LTF_width / 2, self.LTF_length / 2)
         matrix = np.linalg.inv(rotation_matrix(np.radians(-self.tilt_angle), (0, 1, 0)))
 
         homogeneous_pt = np.ones(4)

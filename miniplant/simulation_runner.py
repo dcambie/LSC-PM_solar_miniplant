@@ -24,7 +24,7 @@ def _common_simulation_runner(
     # SINGLE-THREADED
     if workers == 1:
         if render:
-            renderer = MeshcatRenderer(wireframe=False, open_browser=True, transparency=True, opacity=0.5)
+            renderer = MeshcatRenderer(open_browser=True)
             renderer.render(scene)
         finals = []
         for ray in scene.emit(num_photons):
@@ -89,6 +89,6 @@ def run_diffuse_simulation(
 
 
 if __name__ == "__main__":
-    run_diffuse_simulation(tilt_angle=0, render=True, workers=1, num_photons=100, include_dye=True)
-    # run_direct_simulation(tilt_angle=10, render=True, workers=1, include_dye=True)
+    # run_diffuse_simulation(tilt_angle=0, render=True, workers=1, num_photons=100, include_dye=True)
+    run_direct_simulation(tilt_angle=0, render=True, workers=1, include_dye=True, num_photons=100)
     input()
