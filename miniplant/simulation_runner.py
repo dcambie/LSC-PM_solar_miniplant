@@ -27,12 +27,22 @@ def _common_simulation_runner(
             renderer = MeshcatRenderer(open_browser=True)
             renderer.render(scene)
         finals = []
-        for ray in scene.emit(num_photons):
+        valid_photon = 0
+
+        while True:
+            ray = next(scene.emit(1))
             steps = photon_tracer.follow(scene, ray)
             path, events = zip(*steps)
             finals.append(events[-1])
             if render:
                 renderer.add_ray_path(path)
+            # FIXME check number
+            if len(events) > 2:
+                valid_photon += 1
+
+            if valid_photon >= 100:
+                break
+
     else:
         if render:
             logger.warning(

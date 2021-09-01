@@ -3,6 +3,8 @@ import io
 import logging
 from typing import Callable
 
+from pvtrace.material.utils import lambertian
+
 import pandas as pd
 import numpy as np
 import trimesh
@@ -60,6 +62,14 @@ LTF_H = 6e-3
 # REACTOR_AREA_IN_M2 = LTF_W * LTF_L
 
 wire_frame = False
+
+
+def downfacing_labertian():
+    """
+    Gets Lambertian direction and change Y axis
+    """
+    coord = lambertian()
+    return coord[0], coord[1], -coord[2]
 
 
 def _create_scene_common(tilt_angle, light_source, include_dye=None) -> Scene:
@@ -188,12 +198,12 @@ def create_direct_scene(
 ) -> Scene:
     """ Create a scene with a fixed light position and direction, to match direct irradiation """
 
-    # Define rays direction based on solar position
-    solar_light_vector = spherical_to_cart(
-        np.deg2rad(-solar_elevation + 90), np.deg2rad(-solar_azimuth + 180)
-    )
 
-    reversed_solar_light_vector = VectorInverter(solar_light_vector)
+    def led_pos():
+        leds = [(0.01,0,0.1), (-0.01,0,0.1)]
+        led = random.choice(leds)
+        return led
+
     # Create light
     solar_light = Node(
         name="Solar Light",
