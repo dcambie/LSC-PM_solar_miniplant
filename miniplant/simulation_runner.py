@@ -3,14 +3,17 @@ Module to set up a scene to run a simulation in direct or diffuse conditions
 """
 import logging
 import collections
+import numpy as np
+import matplotlib.pyplot as plt
 
 from typing import Callable
 
 from pvtrace import photon_tracer, MeshcatRenderer, Event, Scene
 
-from miniplant.scene_creator import create_direct_scene, create_diffuse_scene
+from miniplant.scene_creator import create_direct_scene
 
 logger = logging.getLogger("pvtrace").getChild("miniplant")
+logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 
 def _common_simulation_runner(
@@ -27,20 +30,36 @@ def _common_simulation_runner(
             renderer = MeshcatRenderer(open_browser=True)
             renderer.render(scene)
         finals = []
+        final_wavelengths = []
         valid_photon = 0
+        missed_photon = 0
 
         while True:
             ray = next(scene.emit(1))
             steps = photon_tracer.follow(scene, ray)
             path, events = zip(*steps)
             finals.append(events[-1])
-            if render:
-                renderer.add_ray_path(path)
-            # FIXME check number
+
+            # Ensures only photons at least hitting the reactor are taken into account
             if len(events) > 2:
                 valid_photon += 1
+                # print(ray.wavelength)
+                final_wavelengths.append(ray.wavelength)
+                if render:
+                    renderer.add_ray_path(path)
+                if np.mod(100*valid_photon/num_photons, 10) == 0:
+                    print(f"Currently {100*valid_photon/num_photons:.2f}% has been simulated")
+            else:
+                missed_photon += 1
 
-            if valid_photon >= 100:
+            if valid_photon >= num_photons:
+                plt.hist(final_wavelengths, bins=25, density=True, histtype='step',
+                         label='sample')
+                # plt.plot(x, y / np.trapz(y, x), label='distribution')
+                plt.legend()
+                plt.xlabel("Wavelength (nm)")
+                plt.grid(linestyle='dotted')
+                plt.show()
                 break
 
     else:
@@ -53,16 +72,28 @@ def _common_simulation_runner(
         finals = [photon[-1][1] for photon in results]
 
     count_events = collections.Counter(finals)
-    reacted_fraction = count_events[Event.REACT] / num_photons
+    reacted_fraction = count_events[Event.REACT] / valid_photon
+    # print(count_events[Event.KILL])
+    # print(count_events[Event.REACT])
+    # print(count_events[Event.EMIT])
+    # print(count_events[Event.ABSORB])
+    # print(count_events[Event.EXIT])
+    # print(count_events[Event.REFLECT])
+    # print(count_events[Event.NONRADIATIVE])
+    # print(count_events[Event.SCATTER])
+    # print(count_events[Event.TRANSMIT])
+    total_photons = valid_photon + missed_photon
+    # print(total_photons)
+    # print(valid_photon)
+    # print(missed_photon)
+    missed_fraction = missed_photon / total_photons
+    logger.debug(f"Fraction of photons missed was {missed_fraction:.3f}")
     logger.debug(f"*** SIMULATION ENDED *** (Efficiency was {reacted_fraction:.3f})")
     return reacted_fraction
 
 
 def run_direct_simulation(
-    tilt_angle: int = 0,
-    solar_elevation: int = 30,
-    solar_azimuth: int = 180,
-    solar_spectrum_function: Callable = lambda: 555,
+    light_distribution: Callable = lambda: 555,
     num_photons: int = 100,
     render: bool = False,
     workers: int = None,
@@ -71,34 +102,10 @@ def run_direct_simulation(
     """
     Create a scene for direct irradiation with the provided parameters and runs a simulation on it
     """
-    scene = create_direct_scene(
-        tilt_angle=tilt_angle,
-        solar_elevation=solar_elevation,
-        solar_azimuth=solar_azimuth,
-        solar_spectrum_function=solar_spectrum_function,
-        include_dye=include_dye
-    )
-    return _common_simulation_runner(scene, num_photons, render, workers)
-
-
-def run_diffuse_simulation(
-    tilt_angle: int = 0,
-    solar_spectrum_function: Callable = lambda: 555,
-    num_photons: int = 100,
-    render: bool = False,
-    workers: int = None,
-    include_dye: bool = None
-) -> float:
-    """
-    Create a scene for diffuse irradiation with the provided parameters and runs a simulation on it
-    """
-    scene = create_diffuse_scene(
-        tilt_angle=tilt_angle, solar_spectrum_function=solar_spectrum_function, include_dye=include_dye
-    )
+    scene = create_direct_scene(include_dye=include_dye)
     return _common_simulation_runner(scene, num_photons, render, workers)
 
 
 if __name__ == "__main__":
-    # run_diffuse_simulation(tilt_angle=0, render=True, workers=1, num_photons=100, include_dye=True)
-    run_direct_simulation(tilt_angle=0, render=True, workers=1, include_dye=True, num_photons=100)
+    run_direct_simulation(num_photons=200, render=True, workers=1, include_dye=True)
     input()
