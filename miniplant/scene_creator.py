@@ -48,7 +48,7 @@ INCH = 0.0254  # meter
 # LTF reactor geometrical values
 LTF_W = 60e-3
 LTF_L = 101e-3
-t_coating = 2e-5
+t_coating = 18e-6
 LTF_H = 6e-3
 
 # REACTOR_AREA_IN_M2 = LTF_W * LTF_L
@@ -56,18 +56,20 @@ LTF_H = 6e-3
 wire_frame = False
 
 
-def down_facing_LED(half_angle: float = np.pi/3):
+def down_facing_LED(half_angle: float = np.pi / 3):
     """
     Gets Lambertian direction and change Y axis
     """
     coord = cone(half_angle)
     return coord[0], coord[1], -coord[2]
 
+
+emission = pd.read_csv(io.BytesIO(WHITE_LED_EMS_DATAFILE), encoding="utf8", sep="\t").values
+dist = Distribution(x=emission[:, 0], y=emission[:, 1])
+
+
 def wavelength_LED():
-    emission = pd.read_csv(io.BytesIO(WHITE_LED_EMS_DATAFILE), encoding="utf8", sep="\t").values
-    dist = Distribution(x=emission[:, 0], y=emission[:, 1])
-    wl = dist.sample(np.random.uniform())
-    return wl
+    return dist.sample(np.random.uniform())
 
 
 def _create_scene_common(light_source, include_dye=None) -> Scene:
@@ -172,6 +174,8 @@ def _create_scene_common(light_source, include_dye=None) -> Scene:
         parent=reactor,
     )
 
+    ltf.translate((0, -2.32400e-3, 0))
+
     reactor.translate((0, 0, -1 / 2 * LTF_H - t_coating))
 
     return Scene(world)
@@ -183,21 +187,17 @@ def create_direct_scene(
 ) -> Scene:
     """ Create a scene with a fixed light position and direction, to match direct irradiation """
 
-    def LED_pos():
-        n = 29
-        m = 39
-        dy = 1.7e-2
-        dx = 1.3e-2
-        h_box = 29.8e-2
-        leds = []
+    m = 39
+    n = 29
+    dy = 1.3e-2
+    dx = 1.7e-2
+    h_box = 29.8e-2
+    LED_POSITION = [(-np.ceil(n / 2) * dx + i * dx,
+                     -np.ceil(m / 2) * dy + j * dy,
+                     h_box) for i in range(n) for j in range(m)]
 
-        for i in range(n):
-            for j in range(m):
-                leds.append((-np.ceil(n/2)*dy + i*dy,
-                             -np.ceil(m/2)*dx + j*dx,
-                             h_box))
-        led = random.choice(leds)
-        return led
+    def LED_pos():
+        return random.choice(LED_POSITION)
 
     # Create light
     LED_light = Node(
@@ -211,4 +211,3 @@ def create_direct_scene(
     )
 
     return _create_scene_common(light_source=LED_light, include_dye=include_dye)
-
