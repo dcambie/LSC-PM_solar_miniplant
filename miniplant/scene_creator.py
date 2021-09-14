@@ -56,11 +56,11 @@ LTF_H = 6e-3
 wire_frame = False
 
 
-def down_facing_LED(half_angle: float = np.pi / 3):
+def down_facing_LED():
     """
     Gets Lambertian direction and change Y axis
     """
-    coord = cone(half_angle)
+    coord = lambertian()
     return coord[0], coord[1], -coord[2]
 
 
