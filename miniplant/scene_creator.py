@@ -111,12 +111,12 @@ def _create_scene_common(light_source, include_dye=None) -> Scene:
             material=Material(
                 refractive_index=BF33_RI,
                 components=glass_component,
-                color=0xFFFFFF,
-                transparent=True,
-                opacity=1,
-                wireframe=True,
             ),
         ),
+        appearance=dict(color=0xFFFFFF,
+                        transparent=True,
+                        opacity=1,
+                        wireframe=True),
         parent=world,
     )
 
@@ -132,9 +132,9 @@ def _create_scene_common(light_source, include_dye=None) -> Scene:
             material=Material(
                 refractive_index=Coating_RI,
                 components=coating_component,
-                **coating_vis_prop,
             ),
         ),
+        appearance=coating_vis_prop,
         parent=reactor,
     )
 
@@ -145,9 +145,9 @@ def _create_scene_common(light_source, include_dye=None) -> Scene:
             material=Material(
                 refractive_index=Coating_RI,
                 components=coating_component,
-                **coating_vis_prop,
             ),
         ),
+        appearance=coating_vis_prop,
         parent=reactor,
     )
 
@@ -164,13 +164,13 @@ def _create_scene_common(light_source, include_dye=None) -> Scene:
             trimesh=trimesh.load('reactor_data/LTF_Channels.stl'),
             material=Material(
                 refractive_index=ACN_RI,
-                components=[reaction_mixture_material],
-                color=0x0000FF,
-                transparent=True,
-                opacity=0.8,
-                wireframe=True,
+                components=[reaction_mixture_material]
             ),
         ),
+        appearance=dict(color=0x0000FF,
+                transparent=True,
+                opacity=0.8,
+                wireframe=True),
         parent=reactor,
     )
 
