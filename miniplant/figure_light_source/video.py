@@ -13,7 +13,7 @@ from meshcat.animation import Animation, AnimationFrameVisualizer
 import meshcat
 
 from miniplant.scene_creator import LR305_ABS_DATAFILE, LR305_EMS_DATAFILE, PMMA_RI, MB_ABS_DATAFILE, INCH, PFA_RI, \
-    ACN_RI
+    MeOH_RI
 from miniplant.utils import MyLight, IsotropicPhotonGenerator
 
 
@@ -102,7 +102,7 @@ for capillary_num in range(16):
                 length=0.47,
                 radius=(1 / 16 * INCH) / 2,
                 material=Material(
-                    refractive_index=ACN_RI,
+                    refractive_index=MeOH_RI,
                     components=[reaction_mixture_material],
                     color = 0x0000ff,
                     transparent = False,

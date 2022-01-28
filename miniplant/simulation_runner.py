@@ -82,8 +82,8 @@ def _common_simulation_runner(
     # print(valid_photon)
     # print(missed_photon)
     missed_fraction = missed_photon / total_photons
-    logger.debug(f"Fraction of photons missed was {missed_fraction:.3f}")
-    logger.debug(f"*** SIMULATION ENDED *** (Efficiency was {reacted_fraction:.3f})")
+    logger.debug(f"Fraction of photons missed was {missed_fraction:.4f}")
+    logger.debug(f"*** SIMULATION ENDED *** (Efficiency was {reacted_fraction:.6f})")
 
     return reacted_fraction
 

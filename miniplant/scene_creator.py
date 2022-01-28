@@ -29,15 +29,14 @@ from pvtrace import isotropic
 import pkgutil
 from miniplant import reactor_data
 
-MB_ABS_DATAFILE = pkgutil.get_data(__name__, "reactor_data/MB_1M_1m_ACN.tsv")
+MB_ABS_DATAFILE = pkgutil.get_data(__name__, "reactor_data/02mM_MB_MeOH.txt")
 LR305_ABS_DATAFILE = pkgutil.get_data(__name__, "reactor_data/Red_Absorption.txt")
 LR305_EMS_DATAFILE = pkgutil.get_data(__name__, "reactor_data/Evonik_lr305_normalized_to_1m_ems.tsv")
 WHITE_LED_EMS_DATAFILE = pkgutil.get_data(__name__, "reactor_data/White_LED_em.txt")
 
 # Refractive indexes
 BF33_RI = 1.47
-PFA_RI = 1.34
-ACN_RI = 1.344
+MeOH_RI = 1.32645
 Coating_RI = 1.50
 
 # Units
@@ -127,15 +126,15 @@ def _create_scene_common(light_source, include_coating=None, include_dye=None) -
 
     # Glass matrix and appearance
     glass_component = [Absorber(coefficient=0.1)]  # PMMA background absorption
-    glass_color = 0xFFFFFF
-    glass_vis_prop = dict(transparent=False,
-                          opacity=0.8,
-                          wireframe=True,
+    glass_color = 0xB7C9E2
+    glass_vis_prop = dict(transparent=True,
+                          opacity=0.2,
+                          wireframe=False,
                           )
     channel_color = 0x0000FF
     channel_vis_prop = dict(transparent=True,
                             opacity=0.9,
-                            wireframe=True)
+                            wireframe=False)
 
     # Glass reactor object
     reactor = Node(
@@ -163,7 +162,7 @@ def _create_scene_common(light_source, include_coating=None, include_dye=None) -
         geometry=Mesh(
             trimesh=trimesh.load('reactor_data/LTF_Channels.stl'),
             material=Material(
-                refractive_index=ACN_RI,
+                refractive_index=MeOH_RI,
                 components=[reaction_mixture_material]
             ),
         ),
