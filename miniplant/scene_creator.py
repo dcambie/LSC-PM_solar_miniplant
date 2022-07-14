@@ -1,10 +1,5 @@
-import copy
 import io
 import logging
-from typing import Callable
-
-from pvtrace.material.utils import cone, lambertian
-
 import pandas as pd
 import numpy as np
 import trimesh
@@ -23,11 +18,28 @@ from pvtrace import (
     Scene,
     Mesh,
     Distribution,
+    Surface,
+    SurfaceDelegate,
+    FresnelSurfaceDelegate,
+    isotropic,
 )
-from pvtrace import isotropic
+
+from pvtrace.geometry.utils import flip, angle_between
+from pvtrace.material.utils import (
+    cone,
+    lambertian,
+    fresnel_reflectivity,
+    specular_reflection,
+    fresnel_refraction,
+)
 
 import pkgutil
 from miniplant import reactor_data
+
+from surface_variation import (
+    SurfaceMirror,
+    SurfaceScatterer,
+)
 
 MB_ABS_DATAFILE = pkgutil.get_data(__name__, "reactor_data/02mM_MB_MeOH.txt")
 LR305_ABS_DATAFILE = pkgutil.get_data(__name__, "reactor_data/Red_Absorption.txt")
@@ -37,7 +49,7 @@ WHITE_LED_EMS_DATAFILE = pkgutil.get_data(__name__, "reactor_data/White_LED_em.t
 # Refractive indexes
 BF33_RI = 1.47
 MeOH_RI = 1.32645
-Coating_RI = 1.50
+Coating_RI = 1.49
 
 # Units
 INCH = 0.0254  # meter
@@ -110,7 +122,7 @@ def create_led_scene() -> Scene:
     return Scene(world)
 
 
-def _create_scene_common(light_source, include_coating=None, include_dye=None) -> Scene:
+def _create_scene_common(light_source, include_coating=True, include_dye=True) -> Scene:
     logger = logging.getLogger("pvtrace").getChild("miniplant")
     logger.debug(f"Creating simulation scene.")
 
@@ -143,6 +155,7 @@ def _create_scene_common(light_source, include_coating=None, include_dye=None) -
             size=(LTF_W, LTF_L, LTF_H),
             material=Material(
                 refractive_index=BF33_RI,
+                # surface=Surface(delegate=SurfaceMirror()),
                 components=glass_component,
             ),
         ),
@@ -172,12 +185,6 @@ def _create_scene_common(light_source, include_coating=None, include_dye=None) -
     )
     ltf.appearance["meshcat"] = channel_vis_prop
     ltf.translate((0, -2.32400e-3, 0))
-
-    if include_coating is None:
-        include_coating = True
-
-    if include_dye is None:
-        include_dye = True
 
     if include_dye is True and include_coating is False:
         raise RuntimeError("Sorry, cannot enable dye without a coating!")
@@ -221,6 +228,7 @@ def _create_scene_common(light_source, include_coating=None, include_dye=None) -
                 size=(LTF_W, LTF_L, t_coating),
                 material=Material(
                     refractive_index=Coating_RI,
+                    # surface=Surface(delegate=SurfaceMirror()),
                     components=coating_component,
                 ),
             ),
