@@ -1,6 +1,6 @@
 [project]
 name = "miniplant"
-version = "1.0.0a1"
+version = "1.0.0"
 description = "Code for 'Development of an Off-Grid Solar-Powered Autonomous Chemical Mini-Plant for Producing Fine Chemicals'"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -24,7 +24,7 @@ classifiers = [  # Optional
   "Programming Language :: Python :: 3 :: Only",
 ]
 dependencies = [
-  'pvtrace @ git+https://github.com/cambiegroup/pvtrace.git@miniplant_v1.1',
+  'pvtrace',
   'pvlib>=0.8.1',
   'tables',
   'tqdm>=4.9.0',
