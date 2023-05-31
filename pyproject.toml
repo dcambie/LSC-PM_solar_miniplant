@@ -24,7 +24,7 @@ classifiers = [  # Optional
   "Programming Language :: Python :: 3 :: Only",
 ]
 dependencies = [
-  'pvtrace @ git+https://github.com/cambiegroup/pvtrace.git@miniplant_v1.0',
+  'pvtrace @ git+https://github.com/cambiegroup/pvtrace.git@miniplant_v1.1',
   'pvlib>=0.8.1',
   'tables',
   'tqdm>=4.9.0',
