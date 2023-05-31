@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 from miniplant.locations import LOCATIONS
 
-GOLDEN_RATIO = (1 + 5 ** 0.5) / 2
+GOLDEN_RATIO = (1 + 5**0.5) / 2
 
 for location in LOCATIONS:
     print(f"Working on {location.name}")

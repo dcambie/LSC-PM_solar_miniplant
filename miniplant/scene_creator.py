@@ -29,13 +29,16 @@ from miniplant.utils import (
 )
 
 import pkgutil
-from miniplant import reactor_data
 
 REACTOR_AREA_IN_M2 = 0.47 * 0.47
 
 MB_ABS_DATAFILE = pkgutil.get_data(__name__, "reactor_data/MB_1M_1m_ACN.tsv")
-LR305_ABS_DATAFILE = pkgutil.get_data(__name__, "reactor_data/Evonik_lr305_normalized_to_1m.tsv")
-LR305_EMS_DATAFILE = pkgutil.get_data(__name__, "reactor_data/Evonik_lr305_normalized_to_1m_ems.tsv")
+LR305_ABS_DATAFILE = pkgutil.get_data(
+    __name__, "reactor_data/Evonik_lr305_normalized_to_1m.tsv"
+)
+LR305_EMS_DATAFILE = pkgutil.get_data(
+    __name__, "reactor_data/Evonik_lr305_normalized_to_1m_ems.tsv"
+)
 
 # Refractive indexes
 PMMA_RI = 1.48
@@ -67,12 +70,18 @@ def _create_scene_common(tilt_angle, light_source, include_dye=None, **kwargs) -
         include_dye = True
 
     if include_dye:
-        matrix_component.append(Luminophore(
-            coefficient=pd.read_csv(io.BytesIO(LR305_ABS_DATAFILE), encoding="utf8", sep="\t").values,
-            emission=pd.read_csv(io.BytesIO(LR305_EMS_DATAFILE), encoding="utf8", sep="\t").values,
-            quantum_yield=0.95,
-            phase_function=isotropic,
-        ))
+        matrix_component.append(
+            Luminophore(
+                coefficient=pd.read_csv(
+                    io.BytesIO(LR305_ABS_DATAFILE), encoding="utf8", sep="\t"
+                ).values,
+                emission=pd.read_csv(
+                    io.BytesIO(LR305_EMS_DATAFILE), encoding="utf8", sep="\t"
+                ).values,
+                quantum_yield=0.95,
+                phase_function=isotropic,
+            )
+        )
 
     # LSC object
     reactor = Node(
@@ -92,88 +101,130 @@ def _create_scene_common(tilt_angle, light_source, include_dye=None, **kwargs) -
             name="bottomPV",
             geometry=Box(
                 size=(0.47, 0.47, 0.008),
-                material=Material(refractive_index=3.4, components=[Absorber(coefficient=1e10)],
-                                  color=0x000000,
-                                  transparent=False,
-                                  opacity=0.5,
-                                  ),
+                material=Material(
+                    refractive_index=3.4,
+                    components=[Absorber(coefficient=1e10)],
+                    color=0x000000,
+                    transparent=False,
+                    opacity=0.5,
+                ),
             ),
-            parent=reactor
+            parent=reactor,
         )
-        bottomPV.translate((0, 0, -0.025,))
+        bottomPV.translate(
+            (
+                0,
+                0,
+                -0.025,
+            )
+        )
 
     if kwargs.get("add_side_PV", False):
         side1 = Node(
             name="sidePV1",
             geometry=Box(
                 size=(0.47, 0.01, 0.008),
-                material=Material(refractive_index=3.4, components=[Absorber(coefficient=1e10)],
-                                  color=0x000000,
-                                  transparent=False,
-                                  opacity=0.5,
-                                  ),
+                material=Material(
+                    refractive_index=3.4,
+                    components=[Absorber(coefficient=1e10)],
+                    color=0x000000,
+                    transparent=False,
+                    opacity=0.5,
+                ),
             ),
-            parent=reactor
+            parent=reactor,
         )
-        side1.translate((0, 0.47/2+0.005, 0,))
+        side1.translate(
+            (
+                0,
+                0.47 / 2 + 0.005,
+                0,
+            )
+        )
         side2 = Node(
             name="sidePV2",
             geometry=Box(
                 size=(0.47, 0.01, 0.008),
-                material=Material(refractive_index=3.4, components=[Absorber(coefficient=1e10)],
-                                  color=0x000000,
-                                  transparent=False,
-                                  opacity=0.5,
-                                  ),
+                material=Material(
+                    refractive_index=3.4,
+                    components=[Absorber(coefficient=1e10)],
+                    color=0x000000,
+                    transparent=False,
+                    opacity=0.5,
+                ),
             ),
-            parent=reactor
+            parent=reactor,
         )
-        side2.translate((0, -0.47 / 2 - 0.005, 0,))
+        side2.translate(
+            (
+                0,
+                -0.47 / 2 - 0.005,
+                0,
+            )
+        )
         side3 = Node(
             name="sidePV3",
             geometry=Box(
                 size=(0.01, 0.47, 0.008),
-                material=Material(refractive_index=3.4, components=[Absorber(coefficient=1e10)],
-                                  color=0x000000,
-                                  transparent=False,
-                                  opacity=0.5,
-                                  ),
+                material=Material(
+                    refractive_index=3.4,
+                    components=[Absorber(coefficient=1e10)],
+                    color=0x000000,
+                    transparent=False,
+                    opacity=0.5,
+                ),
             ),
-            parent=reactor
+            parent=reactor,
         )
-        side3.translate((0.47 / 2 + 0.005, 0, 0,))
+        side3.translate(
+            (
+                0.47 / 2 + 0.005,
+                0,
+                0,
+            )
+        )
         side4 = Node(
             name="sidePV4",
             geometry=Box(
                 size=(0.01, 0.47, 0.008),
-                material=Material(refractive_index=3.4, components=[Absorber(coefficient=1e10)],
-                                  color=0x000000,
-                                  transparent=False,
-                                  opacity=0.5,
-                                  ),
+                material=Material(
+                    refractive_index=3.4,
+                    components=[Absorber(coefficient=1e10)],
+                    color=0x000000,
+                    transparent=False,
+                    opacity=0.5,
+                ),
             ),
-            parent=reactor
+            parent=reactor,
         )
-        side4.translate((-0.47 / 2 - 0.005, 0, 0,))
+        side4.translate(
+            (
+                -0.47 / 2 - 0.005,
+                0,
+                0,
+            )
+        )
 
     # Now we need to populate the LSC with the capillaries, that are made by outer tubing and reaction mixture
     capillary = []
     r_mix = []
 
     # Reaction Mixture absorption
-    reaction_absorption_coefficient = pd.read_csv(io.BytesIO(MB_ABS_DATAFILE), encoding="utf8", sep="\t").values
+    reaction_absorption_coefficient = pd.read_csv(
+        io.BytesIO(MB_ABS_DATAFILE), encoding="utf8", sep="\t"
+    ).values
     reaction_mixture_material = Reactor(reaction_absorption_coefficient)
 
     # Create PFA 1/8" capillaries and their reaction mixture
     pfa_cil = Cylinder(
-                    length=0.47,
-                    radius=(1 / 8 * INCH) / 2,
-                    material=Material(
-                        refractive_index=PFA_RI,
-                        components=[Absorber(coefficient=0.1)],  # PFA background absorption
-                        )
-                    )
-    pfa_cil.color = 0xeeeeee
+        length=0.47,
+        radius=(1 / 8 * INCH) / 2,
+        material=Material(
+            refractive_index=PFA_RI,
+            components=[Absorber(coefficient=0.1)],  # PFA background absorption
+        ),
+    )
+    pfa_cil.color = 0xEEEEEE
     pfa_cil.transparency = True
     pfa_cil.opacity = 0.5
 
@@ -186,12 +237,14 @@ def _create_scene_common(tilt_angle, light_source, include_dye=None, **kwargs) -
             )
         )
 
-
         reaction_cil = Cylinder(
-                    length=0.47,
-                    radius=(1 / 16 * INCH) / 2,
-                    material=Material(refractive_index=ACN_RI, components=[reaction_mixture_material]))
-        reaction_cil.color = 0x0000ff
+            length=0.47,
+            radius=(1 / 16 * INCH) / 2,
+            material=Material(
+                refractive_index=ACN_RI, components=[reaction_mixture_material]
+            ),
+        )
+        reaction_cil.color = 0x0000FF
         reaction_cil.transparency = False
         reaction_cil.opacity = 1
 
@@ -227,9 +280,9 @@ def create_direct_scene(
     solar_azimuth: float = 180,
     solar_spectrum_function: Callable = lambda: 555,
     include_dye: bool = None,
-    **kwargs
+    **kwargs,
 ) -> Scene:
-    """ Create a scene with a fixed light position and direction, to match direct irradiation """
+    """Create a scene with a fixed light position and direction, to match direct irradiation"""
 
     # Define rays direction based on solar position
     solar_light_vector = spherical_to_cart(
@@ -250,12 +303,20 @@ def create_direct_scene(
     )
     solar_light.translate(solar_light_vector)
 
-    return _create_scene_common(tilt_angle=tilt_angle, light_source=solar_light, include_dye=include_dye, **kwargs)
+    return _create_scene_common(
+        tilt_angle=tilt_angle,
+        light_source=solar_light,
+        include_dye=include_dye,
+        **kwargs,
+    )
 
 
-def create_diffuse_scene(tilt_angle: float = 30, solar_spectrum_function: Callable = lambda: 555,
-                         include_dye: bool = None):
-    """ Create a scene with a random light position, to match diffuse irradiation """
+def create_diffuse_scene(
+    tilt_angle: float = 30,
+    solar_spectrum_function: Callable = lambda: 555,
+    include_dye: bool = None,
+):
+    """Create a scene with a random light position, to match diffuse irradiation"""
 
     solar_light = Node(
         name="Solar Light",
@@ -265,4 +326,6 @@ def create_diffuse_scene(tilt_angle: float = 30, solar_spectrum_function: Callab
         ),
         parent=None,
     )
-    return _create_scene_common(tilt_angle=tilt_angle, light_source=solar_light, include_dye=include_dye)
+    return _create_scene_common(
+        tilt_angle=tilt_angle, light_source=solar_light, include_dye=include_dye
+    )

@@ -5,27 +5,28 @@ Output in Einstein absorbed.
 
 import time
 import logging
-import os
 from pathlib import Path
 from tqdm import tqdm
 
 # Forcing numpy to single thread results in better multiprocessing performance.
 # See pvtrace issue #48
-os.environ["MKL_NUM_THREADS"] = "1"
-os.environ["NUMEXPR_NUM_THREADS"] = "1"
-os.environ["NUMEXPR_MAX_THREADS"] = "1"
-os.environ["OMP_NUM_THREADS"] = "1"
-
-# Set loggers (no output needed for progress bar to work!)
-logging.getLogger("trimesh").disabled = True
-logging.getLogger("shapely.geos").disabled = True
-logging.getLogger("pvtrace").setLevel(logging.WARNING)  # use logging.DEBUG for more printouts
+# import os
+# os.environ["MKL_NUM_THREADS"] = "1"
+# os.environ["NUMEXPR_NUM_THREADS"] = "1"
+# os.environ["NUMEXPR_MAX_THREADS"] = "1"
+# os.environ["OMP_NUM_THREADS"] = "1"
+#
+# # Set loggers (no output needed for progress bar to work!)
+# logging.getLogger("trimesh").disabled = True
+# logging.getLogger("shapely.geos").disabled = True
+# logging.getLogger("pvtrace").setLevel(
+#     logging.WARNING
+# )  # use logging.DEBUG for more printouts
 
 
 import numpy as np
 
 from pvlib.location import Location
-from pvtrace import *
 
 from miniplant.scene_creator import REACTOR_AREA_IN_M2
 from miniplant.simulation_runner import run_direct_simulation, run_diffuse_simulation
@@ -35,7 +36,7 @@ logger = logging.getLogger("pvtrace").getChild("miniplant")
 
 
 class PhotonFactory:
-    """ Create a callable sampling the current solar spectrum """
+    """Create a callable sampling the current solar spectrum"""
 
     def __init__(self, spectrum):
         self.spectrum = spectrum
@@ -52,13 +53,13 @@ def yearlong_simulation(
     num_photons_per_simulation: int = 120,
     include_dye: bool = True,
     time_range=None,
-    target_file=None
+    target_file=None,
 ):
     logger.info(f"Starting simulation w/ tilt angle {tilt_angle}")
 
     solar_data = solar_data_for_place_and_time(location, tilt_angle, time_resolution)
     if time_range:
-        solar_data = solar_data.loc[time_range[0]:time_range[1]]
+        solar_data = solar_data.loc[time_range[0] : time_range[1]]
 
     def calculate_productivity_for_datapoint(df):
         """
@@ -128,12 +129,20 @@ if __name__ == "__main__":
     # Set loggers
     logging.getLogger("trimesh").disabled = True
     logging.getLogger("shapely.geos").disabled = True
-    logging.getLogger("pvtrace").setLevel(logging.WARNING)  # use logging.DEBUG for more printouts
+    logging.getLogger("pvtrace").setLevel(
+        logging.WARNING
+    )  # use logging.DEBUG for more printouts
 
     from miniplant.locations import EINDHOVEN
+
     sim_to_run = [(EINDHOVEN, 40)]
 
     for sim_params in sim_to_run:
         print(f"Now simulating {sim_params[0].name} at {sim_params[1]} deg tilt angle")
-        yearlong_simulation(tilt_angle=sim_params[1], location=sim_params[0], workers=12, time_resolution=60 * 30,
-                            include_dye=True)
+        yearlong_simulation(
+            tilt_angle=sim_params[1],
+            location=sim_params[0],
+            workers=12,
+            time_resolution=60 * 30,
+            include_dye=True,
+        )

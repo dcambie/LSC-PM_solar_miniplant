@@ -5,14 +5,15 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.dates import DateFormatter
-import matplotlib.ticker as mtick
 from miniplant.locations import LOCATIONS
 
-GOLDEN_RATIO = (1 + 5 ** 0.5) / 2
+GOLDEN_RATIO = (1 + 5**0.5) / 2
 
 for location in LOCATIONS:
     # use Viridis as color cycler to show gradient of angles (individual lines are not distinguishable anyway)
-    plt.rcParams["axes.prop_cycle"] = plt.cycler("color", plt.cm.viridis(np.linspace(1, 0, 19)))
+    plt.rcParams["axes.prop_cycle"] = plt.cycler(
+        "color", plt.cm.viridis(np.linspace(1, 0, 19))
+    )
 
     # Set figure settings
     fig, ax = plt.subplots(figsize=plt.figaspect(1 / GOLDEN_RATIO))

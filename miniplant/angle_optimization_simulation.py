@@ -4,31 +4,29 @@ Performs a screening for the yearly performance of a LSC-PM with different tilt 
 
 import time
 import logging
-import datetime
 from pathlib import Path
 from tqdm import tqdm
 
-import os
-
 # Forcing numpy to single thread results in better multiprocessing performance.
 # See pvtrace issue #48
-os.environ["MKL_NUM_THREADS"] = "1"
-os.environ["NUMEXPR_NUM_THREADS"] = "1"
-os.environ["NUMEXPR_MAX_THREADS"] = "1"
-os.environ["OMP_NUM_THREADS"] = "1"
+# import os
+# os.environ["MKL_NUM_THREADS"] = "1"
+# os.environ["NUMEXPR_NUM_THREADS"] = "1"
+# os.environ["NUMEXPR_MAX_THREADS"] = "1"
+# os.environ["OMP_NUM_THREADS"] = "1"
 
 
 # Set loggers (no output needed for progress bar to work!)
-logging.getLogger("trimesh").disabled = True
-logging.getLogger("shapely.geos").disabled = True
-logging.getLogger("pvtrace").setLevel(logging.WARNING)  # use logging.DEBUG for more printouts
+# logging.getLogger("trimesh").disabled = True
+# logging.getLogger("shapely.geos").disabled = True
+# logging.getLogger("pvtrace").setLevel(
+#     logging.WARNING
+# )
 
 import numpy as np
-import pandas as pd
 
 from pvlib.location import Location
-from pvtrace import *
-
+# from pvtrace import *
 from miniplant.simulation_runner import run_direct_simulation
 from miniplant.solar_data import solar_data_for_place_and_time
 from miniplant.utils import PhotonFactory
@@ -45,7 +43,7 @@ def evaluate_tilt_angle(
     workers: int = None,
     time_resolution: int = 1800,
 ):
-    """ Run a simulation with the given tilt angle/location combination and save results as CSV """
+    """Run a simulation with the given tilt angle/location combination and save results as CSV"""
     logger.info(f"Starting simulation w/ tilt angle {tilt_angle}")
 
     solar_data = solar_data_for_place_and_time(
@@ -79,15 +77,16 @@ def evaluate_tilt_angle(
             solar_spectrum_function=direct_photon_factory,
             num_photons=RAYS_PER_SIMULATIONS,
             workers=workers,
-            include_dye=INCLUDE_DYE
+            include_dye=INCLUDE_DYE,
         )
         df["direct_reacted"] = df["simulation_direct"] * df["direct_irradiance"]
 
         return df
 
     start_time = time.perf_counter()
-    tqdm.pandas(desc=f"{location.name} {tilt_angle}deg", position=1)  # Shows nice progress bar
-    from tqdm import gui
+    tqdm.pandas(
+        desc=f"{location.name} {tilt_angle}deg", position=1
+    )  # Shows nice progress bar
     results = solar_data.progress_apply(calculate_productivity_for_datapoint, axis=1)
     print(f"Simulation ended in {(time.perf_counter() - start_time) / 60:.1f} minutes!")
 
@@ -100,7 +99,12 @@ def evaluate_tilt_angle(
     # Saved CSV now include direct_irradiation_simulation_result and dni_reacted! :)
     results.to_csv(
         target_file,
-        columns=("apparent_elevation", "azimuth", "simulation_direct", "direct_reacted"),
+        columns=(
+            "apparent_elevation",
+            "azimuth",
+            "simulation_direct",
+            "direct_reacted",
+        ),
     )
 
 
@@ -111,4 +115,6 @@ if __name__ == "__main__":
 
     tilt_range = list(range(0, -40, -5))
     for tilt in tilt_range:
-        evaluate_tilt_angle(tilt_angle=tilt, location=site, workers=12, time_resolution=1800)
+        evaluate_tilt_angle(
+            tilt_angle=tilt, location=site, workers=12, time_resolution=1800
+        )

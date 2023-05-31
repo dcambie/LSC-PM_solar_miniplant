@@ -4,16 +4,17 @@ Analyze the results of the simulation including both direct and diffuse componen
 
 import pandas as pd
 from pathlib import Path
-from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.dates import DateFormatter
-import matplotlib.ticker as mtick
 
-from miniplant.experimental_comparison.simulate_experimental_conditions import XP_END, XP_START
+from miniplant.experimental_comparison.simulate_experimental_conditions import (
+    XP_END,
+    XP_START,
+)
 from miniplant.locations import EINDHOVEN
 
-GOLDEN_RATIO = (1 + 5 ** 0.5) / 2
+GOLDEN_RATIO = (1 + 5**0.5) / 2
 
 search_path = Path(".")
 result_files = Path("./experimental_conditions_results.csv")
@@ -21,7 +22,12 @@ result_files = Path("./experimental_conditions_results.csv")
 fig, ax = plt.subplots(ncols=1)
 
 # Load data
-df = pd.read_csv(result_files, parse_dates=[0], index_col=0, date_parser=lambda col: pd.to_datetime(col, utc=True))
+df = pd.read_csv(
+    result_files,
+    parse_dates=[0],
+    index_col=0,
+    date_parser=lambda col: pd.to_datetime(col, utc=True),
+)
 
 # Resample Hourly
 # hourly = df.resample("H").sum()  # Instead of resampling and decreasing resolution just multiply by 2 the half-hourly
@@ -45,19 +51,27 @@ date_form = DateFormatter("%H", tz=EINDHOVEN.pytz)  #  Show hour of the day
 # ax[ix].set_title(caption+f"TOT: {tot:.0f}")
 # Hardcoded titles
 
-maxy = max(hourly["total_reacted"])*1.05
+maxy = max(hourly["total_reacted"]) * 1.05
 ax.set_ylim(0, maxy)
 ax.xaxis.set_major_formatter(date_form)
 ax.xaxis.set_major_locator(mdates.HourLocator(interval=1))
 
 ax.plot(hourly.index, hourly["total_reacted"], linewidth=0.5)
 # Add legend
-ax.fill_between(hourly.index, 0, hourly["direct_reacted"], alpha=0.5, label="direct irradiation")
-ax.fill_between(hourly.index, hourly["direct_reacted"], hourly["total_reacted"], alpha=0.5, label="diffuse irradiation")
+ax.fill_between(
+    hourly.index, 0, hourly["direct_reacted"], alpha=0.5, label="direct irradiation"
+)
+ax.fill_between(
+    hourly.index,
+    hourly["direct_reacted"],
+    hourly["total_reacted"],
+    alpha=0.5,
+    label="diffuse irradiation",
+)
 # ax[ix].legend(loc="upper right", ncol=1)
 
 handles, labels = ax.get_legend_handles_labels()
-fig.legend(handles, labels, loc='lower center')
+fig.legend(handles, labels, loc="lower center")
 
 fig.tight_layout()
 plt.subplots_adjust(bottom=0.2)  # Space for legend

@@ -3,7 +3,8 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from miniplant.locations import *
+from miniplant.locations import PLATAFORMA_SOLAR_ALMERIA
+
 city = PLATAFORMA_SOLAR_ALMERIA.name
 angles = np.arange(0, 91, 5)  # [0 - 90] every 5 degrees
 
@@ -30,7 +31,9 @@ for angle in angles:
         # del df["efficiency_corrected"]
 
         # Get DNI from GHI and DHI [GHI = DHI + DNI * Cos(elevation)]
-        dni = (df["ghi"] - df["dhi"]) / math.cos(math.radians(90-df["apparent_elevation"]))
+        dni = (df["ghi"] - df["dhi"]) / math.cos(
+            math.radians(90 - df["apparent_elevation"])
+        )
         df["dni_reacted"] = (
             df["direct_irradiation_simulation_result"] * dni * df["surface_fraction"]
         )

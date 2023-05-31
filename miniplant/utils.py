@@ -12,28 +12,32 @@ from pvtrace import Distribution, Ray, Light, rectangular_mask
 
 
 def photon_energy(wavelength):
-    """ Returns the energy (in J) of a photon of given wavelength in nm """
+    """Returns the energy (in J) of a photon of given wavelength in nm"""
     return Planck * speed_of_light / (wavelength * 1e-9)
 
 
 def irradiance_to_photon_flux(irradiance_per_nm, at_wavelength):
-    """ Converts W / m^2 into moles / m^2 * s """
+    """Converts W / m^2 into moles / m^2 * s"""
     photons = irradiance_per_nm / photon_energy(at_wavelength)
     moles = photons / Avogadro
     return moles
 
 
-def spectral_distribution_to_photon_distribution(distribution: Distribution, integration_time=1800):
-    """ Given a pvtrace Distribution in W/m^2 converts it into photon flux (units from W to moles!) """
+def spectral_distribution_to_photon_distribution(
+    distribution: Distribution, integration_time=1800
+):
+    """Given a pvtrace Distribution in W/m^2 converts it into photon flux (units from W to moles!)"""
     photon_flux = []
 
     for wavelength, intensity in zip(distribution._x, distribution._y):
-        photon_flux.append(irradiance_to_photon_flux(intensity, wavelength) * integration_time)
+        photon_flux.append(
+            irradiance_to_photon_flux(intensity, wavelength) * integration_time
+        )
     return Distribution(distribution._x, np.array(photon_flux))
 
 
 class PhotonFactory:
-    """ Create a callable sampling the current solar spectrum """
+    """Create a callable sampling the current solar spectrum"""
 
     def __init__(self, spectrum):
         self.spectrum = spectrum
@@ -43,7 +47,7 @@ class PhotonFactory:
 
 
 class MyLight(Light):
-    """ Modified pvtrace.Light object """
+    """Modified pvtrace.Light object"""
 
     def __init__(self, wavelength=None, position_and_direction=None, name="Light"):
         self.wavelength = wavelength
@@ -113,7 +117,9 @@ def create_diffuse_photon(tilt_angle: int = 30) -> np.ndarray:
             solar_azimuth=random_azimuth,
         )
     # Return the corresponding vector (note that the direction is from origin outwards)
-    return spherical_to_cart(theta=np.deg2rad(random_zenith), phi=np.deg2rad(random_azimuth))
+    return spherical_to_cart(
+        theta=np.deg2rad(random_zenith), phi=np.deg2rad(random_azimuth)
+    )
 
 
 class IsotropicPhotonGenerator:

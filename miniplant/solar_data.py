@@ -48,14 +48,16 @@ def solar_data_for_place_and_time(
     sol_pos: pd.DataFrame = site.get_solarposition(times=datetime_points)
 
     # Relative Air Mass
-    relative_airmass: pd.DataFrame = site.get_airmass(times=datetime_points, solar_position=sol_pos)
+    relative_airmass: pd.DataFrame = site.get_airmass(
+        times=datetime_points, solar_position=sol_pos
+    )
     solar_data = pd.concat([sol_pos, relative_airmass], axis=1)
     # print(solar_data.columns)
     # ['apparent_zenith', 'zenith', 'apparent_elevation', 'elevation',
     #        'azimuth', 'equation_of_time', 'airmass_relative', 'airmass_absolute']
 
     def calculate_spectrum(df):
-        """ Calculate diffuse and direct spectra for every time point at the given location and tilt angle """
+        """Calculate diffuse and direct spectra for every time point at the given location and tilt angle"""
         df["aoi"] = irradiance.aoi(
             surface_tilt=tilt_angle,
             surface_azimuth=180,
@@ -160,13 +162,12 @@ if __name__ == "__main__":
         "Townsville": -10,
         "Eindhoven": 40,
         "Plataforma Solar de Almería": 30,
-        "North Cape": 50
+        "North Cape": 50,
     }
 
     for site in LOCATIONS:
         # Calculate solar spectrum and position per every time point
         test_df = solar_data_for_place_and_time(site, tilt[site.name], 60 * 30)
 
-        with pd.option_context('display.max_columns', 40):
+        with pd.option_context("display.max_columns", 40):
             print(test_df.describe())
-

@@ -32,10 +32,8 @@ Sun path diagram Eindhoven
 # - after about 6:30 PM on the summer solstice
 # - after about 5:30 PM on the spring equinox
 # - after about 4:30 PM on the winter solstice
-from pathlib import Path
 
 from pvlib import solarposition
-from pvlib.location import Location
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -79,13 +77,19 @@ for location in LOCATIONS:
         ax.text(pos["azimuth"], pos["apparent_elevation"], str(hour))
 
     for date in pd.to_datetime(["2019-03-21", "2019-06-21", "2019-12-21"]):
-        times = pd.date_range(date, date + pd.Timedelta("24h"), freq="5min", tz=location.pytz)
-        solpos = solarposition.get_solarposition(times, location.latitude, location.longitude)
+        times = pd.date_range(
+            date, date + pd.Timedelta("24h"), freq="5min", tz=location.pytz
+        )
+        solpos = solarposition.get_solarposition(
+            times, location.latitude, location.longitude
+        )
         # Ignore points where apparent elevation is below horizon ;)
         solpos = solpos.loc[solpos["apparent_elevation"] > 0, :]
 
         # Export as csv for both use and validation
-        export_file_name = f"{location.name}_{date.strftime('%Y-%m-%d')}_solar_position.csv"
+        export_file_name = (
+            f"{location.name}_{date.strftime('%Y-%m-%d')}_solar_position.csv"
+        )
         solpos.to_csv(export_file_name, columns=["azimuth", "apparent_elevation"])
 
         label = date.strftime("%d-%b")
